@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, spacing } from "@/theme";
+import { colors, spacing } from "@/theme/legacy";
 
 /** Safe-area + keyboard-aware scroll container used by form screens. */
 export function Screen({ children }: { children: ReactNode }) {

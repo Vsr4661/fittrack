@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ErrorView, LoadingView } from "@/components/QueryState";
 import { useLogout } from "@/features/auth/hooks";
 import { WorkoutList } from "@/features/workouts/components/WorkoutList";
-import { colors, spacing } from "@/theme";
+import { colors, spacing } from "@/theme/legacy";
 import { useProfile, useToggleFollow, useUserWorkouts } from "../hooks";
 import type { Profile } from "../types";
 

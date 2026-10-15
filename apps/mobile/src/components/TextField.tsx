@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
-import { colors, radius, spacing } from "@/theme";
+import { colors, radius, spacing } from "@/theme/legacy";
 
 interface TextFieldProps extends TextInputProps {
   label: string;

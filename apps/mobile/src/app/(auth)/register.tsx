@@ -8,7 +8,7 @@ import { TextField } from "@/components/TextField";
 import { useRegister } from "@/features/auth/hooks";
 import { registerSchema, type RegisterInput } from "@/features/auth/schemas";
 import { useServerErrors } from "@/features/auth/useServerErrors";
-import { colors } from "@/theme";
+import { colors } from "@/theme/legacy";
 
 const FIELDS = ["displayName", "username", "email", "password"] as const;
 

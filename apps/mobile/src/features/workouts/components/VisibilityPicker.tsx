@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colors, radius, spacing } from "@/theme";
+import { colors, radius, spacing } from "@/theme/legacy";
 import type { Visibility } from "../types";
 
 const options: { value: Visibility; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [

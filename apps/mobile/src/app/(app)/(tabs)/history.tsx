@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { WorkoutList } from "@/features/workouts/components/WorkoutList";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useWorkoutHistory } from "@/features/workouts/hooks";
-import { colors, spacing } from "@/theme";
+import { colors, spacing } from "@/theme/legacy";
 
 export default function WorkoutHistoryScreen() {
   const history = useWorkoutHistory();

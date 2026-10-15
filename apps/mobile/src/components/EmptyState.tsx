@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, spacing } from "@/theme";
+import { colors, spacing } from "@/theme/legacy";
 
 export function EmptyState({ title, message, children }: { title: string; message: string; children?: ReactNode }) {
   return (

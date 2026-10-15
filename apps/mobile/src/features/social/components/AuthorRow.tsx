@@ -2,7 +2,7 @@ import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "@/components/Avatar";
 import type { Author } from "@/features/workouts/types";
-import { colors, spacing } from "@/theme";
+import { colors, spacing } from "@/theme/legacy";
 
 /** Avatar + name + @username; tapping opens their profile. */
 export function AuthorRow({ author, subtitle }: { author: Author; subtitle?: string }) {

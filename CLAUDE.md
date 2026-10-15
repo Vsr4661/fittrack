@@ -81,11 +81,18 @@ npm run typecheck -w apps/mobile
 - All HTTP goes through `src/lib/api.ts`; features never touch tokens.
 - Every screen handles loading, error (with retry) and empty states.
 - Install native packages with `npx expo install`, never plain `npm i`.
+- Styles come from `@/theme` via `makeStyles((t) => ...)`; use semantic color roles
+  (`surface`, `textMuted`, `primaryText`), never hex values. White text only on
+  `primary` (#D63F0A, 4.59:1); the brighter `brand` orange is for graphics only.
+- `@/theme/legacy` is a temporary shim for not-yet-redesigned files; don't add new imports of it.
 
 ## Pinned versions / known issues — don't "fix" without checking
 
 - `prisma` / `@prisma/client` pinned to 7.10.0 (npm `latest` points at an 8.0 RC).
-- Root `overrides.react = 19.2.3`: RN 0.86 needs exactly this; two Reacts = crashes.
+- Root `overrides` pin `react` (19.2.3) and `react-native-reanimated` / `-worklets` /
+  `-gesture-handler` to the SDK 57 versions. expo-router lists them as optional
+  peers with `"*"`, so npm otherwise installs a second, newer copy at the root,
+  and two copies of a native module (or of React) crash the app.
 - Don't upgrade `pg` to v9 yet: Prisma 7.10 runs parallel queries on one
   transaction connection (deprecation warning in tests), which pg 9 will reject.
 - Server uses TypeScript 7 (no JS API → tests use @swc/jest, not ts-jest).

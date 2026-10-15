@@ -1,6 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { toApiError } from "@/lib/apiError";
-import { colors, spacing } from "@/theme";
+import { colors, spacing } from "@/theme/legacy";
 import { Button } from "./Button";
 
 // Every query screen has the same loading and error states. One component

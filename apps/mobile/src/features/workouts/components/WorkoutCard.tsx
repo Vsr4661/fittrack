@@ -3,7 +3,7 @@ import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AuthorRow } from "@/features/social/components/AuthorRow";
 import { LikeButton } from "@/features/social/components/LikeButton";
-import { colors, radius, spacing } from "@/theme";
+import { colors, radius, spacing } from "@/theme/legacy";
 import { formatDuration, formatVolume, formatWorkoutDate } from "../format";
 import type { WorkoutSummary } from "../types";
 

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Tabs } from "expo-router";
 import { Pressable } from "react-native";
-import { colors } from "@/theme";
+import { colors } from "@/theme/legacy";
 
 export default function TabsLayout() {
   return (
@@ -31,6 +31,13 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
+          headerRight: () => (
+            <Link href="/settings" asChild>
+              <Pressable hitSlop={12} style={{ marginRight: 16 }} accessibilityLabel="Settings">
+                <Ionicons name="settings-outline" size={22} color={colors.primary} />
+              </Pressable>
+            </Link>
+          ),
           tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" color={color} size={size} />,
         }}
       />

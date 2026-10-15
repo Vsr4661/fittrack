@@ -1,3 +1,7 @@
+// TEMPORARY: the pre-redesign tokens. Each screen migrates to `@/theme`
+// (theme-aware, light/dark) in its own redesign step; delete this file once
+// nothing imports it.
+
 // One place for design tokens, so screens never hard-code colors or spacing.
 export const colors = {
   background: "#FFFFFF",

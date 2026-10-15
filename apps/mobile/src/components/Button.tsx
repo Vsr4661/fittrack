@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
-import { colors, radius } from "@/theme";
+import { colors, radius } from "@/theme/legacy";
 
 interface ButtonProps {
   title: string;

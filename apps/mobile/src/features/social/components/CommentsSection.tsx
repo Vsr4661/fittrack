@@ -3,7 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-nativ
 import { Avatar } from "@/components/Avatar";
 import { ErrorView } from "@/components/QueryState";
 import { toApiError } from "@/lib/apiError";
-import { colors, radius, spacing } from "@/theme";
+import { colors, radius, spacing } from "@/theme/legacy";
 import { useAddComment, useComments, useDeleteComment } from "../hooks";
 import type { Comment } from "../types";
 

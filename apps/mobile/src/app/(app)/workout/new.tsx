@@ -9,7 +9,7 @@ import { VisibilityPicker } from "@/features/workouts/components/VisibilityPicke
 import { draftToInput, useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useCreateWorkout } from "@/features/workouts/hooks";
 import { toApiError } from "@/lib/apiError";
-import { colors, radius, spacing } from "@/theme";
+import { colors, radius, spacing } from "@/theme/legacy";
 
 export default function NewWorkoutScreen() {
   const draft = useWorkoutDraft((s) => s.draft);

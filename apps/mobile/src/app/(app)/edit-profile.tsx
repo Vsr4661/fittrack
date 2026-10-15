@@ -10,7 +10,7 @@ import { TextField } from "@/components/TextField";
 import { useMe } from "@/features/auth/hooks";
 import { useServerErrors } from "@/features/auth/useServerErrors";
 import { useUpdateMe } from "@/features/social/hooks";
-import { colors } from "@/theme";
+import { colors } from "@/theme/legacy";
 
 // Same limits as the server's PATCH /users/me schema
 const editProfileSchema = z.object({

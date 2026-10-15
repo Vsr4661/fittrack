@@ -8,7 +8,7 @@ import { TextField } from "@/components/TextField";
 import { useLogin } from "@/features/auth/hooks";
 import { loginSchema, type LoginInput } from "@/features/auth/schemas";
 import { useServerErrors } from "@/features/auth/useServerErrors";
-import { colors } from "@/theme";
+import { colors } from "@/theme/legacy";
 
 const FIELDS = ["email", "password"] as const;
 

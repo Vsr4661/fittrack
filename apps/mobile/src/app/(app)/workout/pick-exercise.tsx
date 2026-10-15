@@ -5,7 +5,7 @@ import { ErrorView, LoadingView } from "@/components/QueryState";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useExercises } from "@/features/workouts/hooks";
 import type { MuscleGroup } from "@/features/workouts/types";
-import { colors, radius, spacing } from "@/theme";
+import { colors, radius, spacing } from "@/theme/legacy";
 
 const muscleLabel: Record<MuscleGroup, string> = {
   CHEST: "Chest",

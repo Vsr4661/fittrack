@@ -5,7 +5,7 @@ import { Avatar } from "@/components/Avatar";
 import { ErrorView } from "@/components/QueryState";
 import { useUserSearch } from "@/features/social/hooks";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
-import { colors, radius, spacing } from "@/theme";
+import { colors, radius, spacing } from "@/theme/legacy";
 
 export default function SearchScreen() {
   const [text, setText] = useState("");

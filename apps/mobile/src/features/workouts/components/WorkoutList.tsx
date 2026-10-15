@@ -2,7 +2,7 @@ import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query
 import type { ReactElement } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet } from "react-native";
 import { ErrorView, LoadingView } from "@/components/QueryState";
-import { spacing } from "@/theme";
+import { spacing } from "@/theme/legacy";
 import type { WorkoutPage } from "../types";
 import { WorkoutCard } from "./WorkoutCard";
 

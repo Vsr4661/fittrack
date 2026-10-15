@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text } from "react-native";
 import type { WorkoutSocial } from "@/features/workouts/types";
-import { colors, spacing } from "@/theme";
+import { colors, spacing } from "@/theme/legacy";
 import { useToggleLike } from "../hooks";
 
 export function LikeButton({ workoutId, social }: { workoutId: string; social: WorkoutSocial }) {

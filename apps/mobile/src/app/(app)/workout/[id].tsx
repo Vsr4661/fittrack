@@ -10,7 +10,7 @@ import { formatDuration, formatVolume, formatWeight, formatWorkoutDate } from "@
 import { useDeleteWorkout, useWorkout } from "@/features/workouts/hooks";
 import type { WorkoutSet } from "@/features/workouts/types";
 import { toApiError } from "@/lib/apiError";
-import { colors, radius, spacing } from "@/theme";
+import { colors, radius, spacing } from "@/theme/legacy";
 
 export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

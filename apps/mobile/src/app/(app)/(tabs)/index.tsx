@@ -4,7 +4,7 @@ import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { useFeed } from "@/features/social/hooks";
 import { WorkoutList } from "@/features/workouts/components/WorkoutList";
-import { colors } from "@/theme";
+import { colors } from "@/theme/legacy";
 
 export default function FeedScreen() {
   const feed = useFeed();
