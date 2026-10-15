@@ -15,6 +15,7 @@ export default function AppLayout() {
       <Stack.Screen name="search" options={{ title: "Find people" }} />
       <Stack.Screen name="edit-profile" options={{ title: "Edit profile", presentation: "modal" }} />
       <Stack.Screen name="settings" options={{ title: "Settings" }} />
+      <Stack.Screen name="dev-ui" options={{ title: "UI kit (dev)" }} />
     </Stack>
   );
 }

@@ -6,6 +6,9 @@
 //   white on primary #D63F0A     = 4.59:1  -> buttons with white labels
 //   primaryText #D63F0A on white = 4.59:1;  #FF7A45 on dark bg = 7.42:1
 //   textMuted #64748B on white   = 4.76:1;  #94A3B8 on dark card = 6.66:1
+//   Text on tinted badge/button backgrounds needs darker shades in light mode:
+//   success #166534 5.56:1, warning #92400E 5.50:1, danger #B91C1C 5.30:1,
+//   onPrimarySoft #B83508 5.21:1 (the 500/600 shades measured 1.9–4.0:1: fail)
 
 const palette = {
   orange500: "#FF5A1F", // brand: graphics only (rings, indicators, icons)
@@ -22,10 +25,8 @@ const palette = {
   slate100: "#F1F5F9",
   slate50: "#F8FAFC",
   white: "#FFFFFF",
-  green600: "#16A34A",
   green400: "#4ADE80",
   amber500: "#F59E0B",
-  red600: "#DC2626",
   red400: "#F87171",
 } as const;
 
@@ -42,6 +43,7 @@ export interface ColorTokens {
   primaryText: string; // orange text/links on the background
   onPrimary: string;
   primarySoft: string; // tinted backgrounds (selected chip, badges)
+  onPrimarySoft: string; // text/icons on primarySoft
   success: string;
   warning: string;
   danger: string;
@@ -65,9 +67,10 @@ export const lightColors: ColorTokens = {
   primaryText: palette.orange600,
   onPrimary: palette.white,
   primarySoft: "#FFEDE5",
-  success: palette.green600,
-  warning: palette.amber500,
-  danger: palette.red600,
+  onPrimarySoft: "#B83508",
+  success: "#166534",
+  warning: "#92400E",
+  danger: "#B91C1C",
   dangerSoft: "#FEE2E2",
   overlay: "rgba(15, 23, 42, 0.45)",
   skeleton: palette.slate200,
@@ -88,6 +91,7 @@ export const darkColors: ColorTokens = {
   primaryText: palette.orange400,
   onPrimary: palette.white,
   primarySoft: "rgba(255, 90, 31, 0.16)",
+  onPrimarySoft: palette.orange400,
   success: palette.green400,
   warning: palette.amber500,
   danger: palette.red400,

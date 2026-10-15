@@ -12,6 +12,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ToastHost } from "@/components/ui";
 import { restoreSession } from "@/features/auth/session";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/stores/authStore";
@@ -69,7 +70,7 @@ export default function RootLayout() {
   if (!ready) return null;
 
   return (
-    // Required root for swipe gestures and the bottom sheet
+    // Required root for swipe gestures
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={navigationTheme}>
@@ -84,6 +85,8 @@ export default function RootLayout() {
               <Stack.Screen name="(auth)" />
             </Stack.Protected>
           </Stack>
+          {/* Above every screen, so a toast survives navigation (e.g. "Saved" after going back) */}
+          <ToastHost />
         </ThemeProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
