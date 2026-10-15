@@ -1,6 +1,7 @@
 import type { Prisma } from "../../generated/prisma/client.js";
 import { cacheKeys, invalidate } from "../../lib/cache.js";
 import { prisma } from "../../lib/prisma.js";
+import { publishWorkoutChanged, publishWorkoutCreated } from "../../realtime/publish.js";
 import { AppError } from "../../utils/AppError.js";
 import { authorSelect } from "../users/users.select.js";
 import { visibleTo } from "./visibility.js";
@@ -130,6 +131,7 @@ export async function createWorkout(userId: string, input: WorkoutInput) {
     select: workoutSelect(userId),
   });
   await invalidate(cacheKeys.profileCounts(userId)); // workout count changed
+  publishWorkoutCreated(workout.id, userId);
   return toDetail(workout);
 }
 
@@ -152,6 +154,7 @@ export async function replaceWorkout(userId: string, workoutId: string, input: W
       select: workoutSelect(userId),
     });
   });
+  publishWorkoutChanged(workoutId); // visibility may have changed: re-check watchers
   return toDetail(workout);
 }
 
@@ -160,6 +163,7 @@ export async function deleteWorkout(userId: string, workoutId: string) {
   const { count } = await prisma.workout.deleteMany({ where: { id: workoutId, userId } });
   if (count === 0) throw AppError.notFound("Workout not found");
   await invalidate(cacheKeys.profileCounts(userId));
+  publishWorkoutChanged(workoutId); // it's gone: nobody can see it now
 }
 
 // ─── Helpers ───────────────────────────────────────────
