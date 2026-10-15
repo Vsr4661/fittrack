@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-15T16:48:58.453Z",
+  "generatedAt": "2026-10-15T17:25:18.633Z",
   "title": "Design System: FitTrack",
   "extensions": {
     "colorMeta": {
@@ -680,13 +680,15 @@
       "Do keep every touch target at least `MIN_TOUCH` (44pt iOS / 48dp Android).",
       "Do use tabular figures for any number that changes or sits in a column.",
       "Do respect Reduce Motion: springs and fills jump straight to their end state.",
-      "Do give every screen loading, empty and error (with retry) states built from the shared components."
+      "Do give every screen loading, empty and error (with retry) states built from the shared components.",
+      "Do say what a number counts when it isn't obvious (e.g. \"Only workouts you can see are counted\"), as Progress and Leaderboard do."
     ],
     "donts": [
       "Don't put text on Effort Orange (3.12:1); it is for graphics only.",
       "Don't add a second typeface or a second icon set (Ionicons is the only one).",
       "Don't use shadows to signal importance or rely on them in dark mode.",
       "Don't set a fixed `height` on anything that contains text; use `minHeight` so large text grows the control.",
+      "Don't use confetti or celebration for anything but a real personal record; rarity is what makes it mean something.",
       "Don't fake features: unfinished things are labeled (e.g. a \"Soon\" badge), never decorated to look real."
     ]
   }

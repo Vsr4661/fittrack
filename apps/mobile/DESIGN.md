@@ -401,6 +401,33 @@ The mid-workout row: set number (or "W" for warmups, in Warmup Amber), weight
 and reps inputs in large tabular figures, and a completion tick. Completing a
 set fills the row with Done Wash and fires a haptic; swiping left reveals Delete.
 
+### Weekly Bar Chart (signature)
+Twelve weekly bars on the Progress screen, built from plain Views (no chart
+library). Past weeks are solid Graphite (Pewter in dark mode), and only the
+current week is Effort Orange, so "now" stands out without a legend and every
+bar passes 3:1 against its card. Empty weeks keep a 3pt Chalk Dust stub,
+because a gap in training is information. Bars grow from their bottom edge
+(scaleY, 500ms ease-out cubic, 30ms stagger left to right); there's no motion
+under Reduce Motion. Date labels sit under every fourth week, and the last one
+reads "Now". Screen readers get one summary label instead of twelve bars.
+
+### Podium (signature)
+The Leaderboard's top three in classic 2nd · 1st · 3rd order. First place
+stands on the screen's one Ember block, with white rank text and a trophy in
+Effort Orange; the others stand on Chalk Dust blocks. Blocks rise on a spring
+(damping 14, stiffness 140): 3rd, then 2nd, then 1st, so the winner arrives
+last. Block heights belong to the slot, not the rank, so tied ranks (1, 1, 3)
+still form a podium. The viewer's avatar gets an Effort Orange ring and the
+label "You". The podium appears only with three or more people.
+
+### Confetti (signature)
+Reserved for a genuine personal record: never for a first-ever session, never
+for routine saves. Forty theme-colored pieces fall for 2.2s, all driven by one
+shared value. They're decorative only: hidden from screen readers, they never
+block touches, and they aren't rendered under Reduce Motion. The Ember Wash
+"New personal record!" banner is a live region, and with the success haptic
+it carries the message.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -411,10 +438,12 @@ set fills the row with Done Wash and fires a haptic; swiping left reveals Delete
 - **Do** use tabular figures for any number that changes or sits in a column.
 - **Do** respect Reduce Motion: springs and fills jump straight to their end state.
 - **Do** give every screen loading, empty and error (with retry) states built from the shared components.
+- **Do** say what a number counts when it isn't obvious (e.g. "Only workouts you can see are counted"), as Progress and Leaderboard do.
 
 ### Don't:
 - **Don't** put text on Effort Orange (3.12:1); it is for graphics only.
 - **Don't** add a second typeface or a second icon set (Ionicons is the only one).
 - **Don't** use shadows to signal importance or rely on them in dark mode.
 - **Don't** set a fixed `height` on anything that contains text; use `minHeight` so large text grows the control.
+- **Don't** use confetti or celebration for anything but a real personal record; rarity is what makes it mean something.
 - **Don't** fake features: unfinished things are labeled (e.g. a "Soon" badge), never decorated to look real.
