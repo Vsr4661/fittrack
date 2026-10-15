@@ -5,6 +5,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleShee
 import { Button } from "@/components/Button";
 import { ElapsedTime } from "@/features/workouts/components/ElapsedTime";
 import { SetRow } from "@/features/workouts/components/SetRow";
+import { VisibilityPicker } from "@/features/workouts/components/VisibilityPicker";
 import { draftToInput, useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useCreateWorkout } from "@/features/workouts/hooks";
 import { toApiError } from "@/lib/apiError";
@@ -71,6 +72,7 @@ export default function NewWorkoutScreen() {
           placeholder="Workout name"
           accessibilityLabel="Workout name"
         />
+        <VisibilityPicker value={draft.visibility} onChange={actions.setVisibility} />
 
         {draft.exercises.map((entry) => (
           <View key={entry.key} style={styles.exercise}>

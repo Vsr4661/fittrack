@@ -1,4 +1,4 @@
-import { draftToInput, useWorkoutDraft, type WorkoutDraft } from "@/features/workouts/draftStore";
+import { draftToInput, migrateDraft, useWorkoutDraft, type WorkoutDraft } from "@/features/workouts/draftStore";
 import { formatClock, formatDuration, formatVolume, formatWeight, parseKgToGrams, parseReps } from "@/features/workouts/format";
 
 const bench = { id: "ex-bench", name: "Bench Press", muscleGroup: "CHEST" as const };
@@ -111,6 +111,7 @@ describe("workout draft store", () => {
 describe("draftToInput (validation + API payload)", () => {
   const baseDraft = (exercises: WorkoutDraft["exercises"]): WorkoutDraft => ({
     title: "  Push day  ",
+    visibility: "FOLLOWERS",
     startedAt: "2026-10-15T10:00:00.000Z",
     exercises,
   });
@@ -129,6 +130,7 @@ describe("draftToInput (validation + API payload)", () => {
       ok: true,
       input: {
         title: "Push day",
+        visibility: "FOLLOWERS",
         startedAt: "2026-10-15T10:00:00.000Z",
         endedAt: "2026-10-15T11:00:00.000Z",
         exercises: [
@@ -160,5 +162,24 @@ describe("draftToInput (validation + API payload)", () => {
     ["an exercise with only blank rows", baseDraft([{ key: "1", exercise: squat, sets: [set("", "")] }]), "Log at least one set for Back Squat, or remove it."],
   ])("rejects %s with a specific message", (_label, input, error) => {
     expect(draftToInput(input)).toEqual({ ok: false, error });
+  });
+});
+
+describe("persisted draft migration", () => {
+  it("upgrades a v0 draft (saved before visibility existed) to PUBLIC", () => {
+    const v0 = { draft: { title: "Old", startedAt: "2026-10-15T10:00:00.000Z", exercises: [] } };
+
+    expect(migrateDraft(v0, 0)).toEqual({ draft: { ...v0.draft, visibility: "PUBLIC" } });
+  });
+
+  it("leaves an empty v0 state alone", () => {
+    expect(migrateDraft({ draft: null }, 0)).toEqual({ draft: null });
+  });
+
+  it("new drafts start PUBLIC and can change visibility", () => {
+    store().start();
+    store().setVisibility("PRIVATE");
+
+    expect(draft().visibility).toBe("PRIVATE");
   });
 });

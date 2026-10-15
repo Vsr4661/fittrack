@@ -10,6 +10,19 @@ export interface Exercise {
   equipment: string;
 }
 
+export interface Author {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+export interface WorkoutSocial {
+  likeCount: number;
+  commentCount: number;
+  likedByMe: boolean;
+}
+
 export interface WorkoutStats {
   exerciseCount: number;
   setCount: number;
@@ -35,7 +48,9 @@ export interface WorkoutDetail {
   visibility: Visibility;
   startedAt: string;
   endedAt: string | null;
+  author: Author;
   stats: WorkoutStats;
+  social: WorkoutSocial;
   exercises: { id: string; position: number; notes: string | null; exercise: Exercise; sets: WorkoutSet[] }[];
 }
 
@@ -45,8 +60,10 @@ export interface WorkoutSummary {
   visibility: Visibility;
   startedAt: string;
   endedAt: string | null;
+  author: Author;
   exerciseNames: string[];
   stats: WorkoutStats;
+  social: WorkoutSocial;
 }
 
 export interface WorkoutPage {
@@ -59,6 +76,6 @@ export interface WorkoutInput {
   title: string;
   startedAt: string;
   endedAt?: string;
-  visibility?: Visibility;
+  visibility: Visibility;
   exercises: { exerciseId: string; sets: { reps?: number; weightGrams?: number; isWarmup?: boolean }[] }[];
 }

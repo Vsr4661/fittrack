@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { defaultWorkoutTitle, parseKgToGrams, parseReps } from "./format";
-import type { Exercise, WorkoutInput } from "./types";
+import type { Exercise, Visibility, WorkoutInput } from "./types";
 
 // Inputs are kept as the strings the user typed ("82,5", ""), and only converted
 // to numbers when saving. Converting on every keystroke would fight the user,
@@ -22,6 +22,7 @@ export interface DraftExercise {
 
 export interface WorkoutDraft {
   title: string;
+  visibility: Visibility;
   startedAt: string;
   exercises: DraftExercise[];
 }
@@ -30,6 +31,7 @@ interface DraftState {
   draft: WorkoutDraft | null;
   start: () => void;
   setTitle: (title: string) => void;
+  setVisibility: (visibility: Visibility) => void;
   addExercise: (exercise: DraftExercise["exercise"]) => void;
   removeExercise: (exerciseKey: string) => void;
   addSet: (exerciseKey: string) => void;
@@ -61,10 +63,14 @@ export const useWorkoutDraft = create<DraftState>()(
 
         start: () => {
           if (get().draft) return; // never clobber a workout already in progress
-          set({ draft: { title: defaultWorkoutTitle(), startedAt: new Date().toISOString(), exercises: [] } });
+          set({
+            draft: { title: defaultWorkoutTitle(), visibility: "PUBLIC", startedAt: new Date().toISOString(), exercises: [] },
+          });
         },
 
         setTitle: (title) => update((d) => ({ ...d, title })),
+
+        setVisibility: (visibility) => update((d) => ({ ...d, visibility })),
 
         addExercise: (exercise) =>
           update((d) => ({ ...d, exercises: [...d.exercises, { key: newKey(), exercise, sets: [emptySet()] }] })),
@@ -100,9 +106,22 @@ export const useWorkoutDraft = create<DraftState>()(
       name: "fittrack.workoutDraft",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ draft: state.draft }), // persist data, not functions
+      // Bump `version` whenever the saved shape changes, and upgrade old data in
+      // `migrate`. A draft saved by an older app version must still load.
+      version: 1,
+      migrate: migrateDraft,
     },
   ),
 );
+
+/** v0 (Phase 4) drafts had no visibility; they default to PUBLIC, as the server does. */
+export function migrateDraft(persisted: unknown, version: number) {
+  const state = (persisted ?? {}) as { draft: (Omit<WorkoutDraft, "visibility"> & { visibility?: Visibility }) | null };
+  if (version < 1 && state.draft) {
+    return { draft: { ...state.draft, visibility: state.draft.visibility ?? "PUBLIC" } };
+  }
+  return state as { draft: WorkoutDraft | null };
+}
 
 export type DraftResult = { ok: true; input: WorkoutInput } | { ok: false; error: string };
 
@@ -139,6 +158,12 @@ export function draftToInput(draft: WorkoutDraft, endedAt: Date = new Date()): D
 
   return {
     ok: true,
-    input: { title: draft.title.trim(), startedAt: draft.startedAt, endedAt: endedAt.toISOString(), exercises },
+    input: {
+      title: draft.title.trim(),
+      visibility: draft.visibility,
+      startedAt: draft.startedAt,
+      endedAt: endedAt.toISOString(),
+      exercises,
+    },
   };
 }

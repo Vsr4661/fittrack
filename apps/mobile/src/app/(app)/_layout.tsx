@@ -11,6 +11,9 @@ export default function AppLayout() {
       />
       <Stack.Screen name="workout/pick-exercise" options={{ title: "Add exercise", presentation: "modal" }} />
       <Stack.Screen name="workout/[id]" options={{ title: "Workout" }} />
+      <Stack.Screen name="user/[username]" options={{ title: "Profile" }} />
+      <Stack.Screen name="search" options={{ title: "Find people" }} />
+      <Stack.Screen name="edit-profile" options={{ title: "Edit profile", presentation: "modal" }} />
     </Stack>
   );
 }

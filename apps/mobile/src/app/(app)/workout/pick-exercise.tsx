@@ -1,11 +1,10 @@
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Button } from "@/components/Button";
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ErrorView, LoadingView } from "@/components/QueryState";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useExercises } from "@/features/workouts/hooks";
 import type { MuscleGroup } from "@/features/workouts/types";
-import { toApiError } from "@/lib/apiError";
 import { colors, radius, spacing } from "@/theme";
 
 const muscleLabel: Record<MuscleGroup, string> = {
@@ -31,22 +30,8 @@ export default function PickExerciseScreen() {
       .filter((e) => q === "" || e.name.toLowerCase().includes(q));
   }, [exercises.data, search]);
 
-  if (exercises.isPending) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  if (exercises.isError) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{toApiError(exercises.error).message}</Text>
-        <Button title="Try again" variant="secondary" onPress={() => exercises.refetch()} />
-      </View>
-    );
-  }
+  if (exercises.isPending) return <LoadingView />;
+  if (exercises.isError) return <ErrorView error={exercises.error} onRetry={() => exercises.refetch()} />;
 
   return (
     <View style={styles.container}>
@@ -86,8 +71,6 @@ export default function PickExerciseScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.md, padding: spacing.lg, backgroundColor: colors.background },
-  error: { color: colors.danger, fontSize: 16, textAlign: "center" },
   search: {
     margin: spacing.md,
     borderRadius: radius.md,
