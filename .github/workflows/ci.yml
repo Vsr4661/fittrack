@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch cancels the older, now-pointless run
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: Server (typecheck, build, test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Real Postgres + Redis, same versions as docker-compose.yml. Tests hit a
+    # real database, not mocks, so CI catches SQL/constraint/migration bugs.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: fittrack
+          POSTGRES_PASSWORD: fittrack
+          POSTGRES_DB: fittrack_test # matches apps/server/.env.test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fittrack"
+          --health-interval 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      # `npm ci` installs exactly what package-lock.json says (and runs the
+      # server's postinstall, which generates the Prisma client)
+      - run: npm ci
+      - run: npm run typecheck -w apps/server
+      - run: npm run build -w apps/server
+      # pretest applies migrations to fittrack_test, then Jest runs
+      - run: npm test -w apps/server
+
+  mobile:
+    name: Mobile (typecheck, test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Note: typed routes (.expo/types) are git-ignored, so CI type-checks
+      # links loosely; strict href checking happens in local development.
+      - run: npm run typecheck -w apps/mobile
+      - run: npm test -w apps/mobile -- --ci
