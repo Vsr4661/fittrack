@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
+import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { EmptyState, LargeTitle } from "@/components/ui";
+import { useFeedUpdates } from "@/features/realtime/feedUpdates";
+import { NewWorkoutsPill } from "@/features/realtime/NewWorkoutsPill";
 import { useFeed } from "@/features/social/hooks";
 import { WorkoutList } from "@/features/workouts/components/WorkoutList";
 import { MIN_TOUCH, useTheme } from "@/theme";
@@ -9,6 +12,11 @@ import { MIN_TOUCH, useTheme } from "@/theme";
 export default function FeedScreen() {
   const feed = useFeed();
   const { colors } = useTheme();
+
+  // Any fresh feed (pull-to-refresh, or the pill) means "new" has been seen
+  useEffect(() => {
+    if (feed.dataUpdatedAt) useFeedUpdates.getState().setHasNew(false);
+  }, [feed.dataUpdatedAt]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -41,6 +49,7 @@ export default function FeedScreen() {
           />
         }
       />
+      <NewWorkoutsPill onPress={() => void feed.refetch()} />
     </View>
   );
 }

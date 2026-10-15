@@ -5,6 +5,7 @@ import { Badge, Card, Confetti, ErrorState, KeyboardScreen, Skeleton, toast } fr
 import { useMe } from "@/features/auth/hooks";
 import { AuthorRow } from "@/features/social/components/AuthorRow";
 import { CommentsSection } from "@/features/social/components/CommentsSection";
+import { useWorkoutRoom } from "@/features/realtime/useWorkoutRoom";
 import { NewRecordBanner, useNewRecords } from "@/features/stats/components/NewRecordBanner";
 import { LikeButton } from "@/features/social/components/LikeButton";
 import { formatClock, formatDistance, formatDuration, formatWeight, formatWorkoutDate, loadStat } from "@/features/workouts/format";
@@ -25,6 +26,7 @@ export default function WorkoutDetailScreen() {
   const { id, celebrate } = useLocalSearchParams<{ id: string; celebrate?: string }>();
   const workout = useWorkout(id);
   const newRecords = useNewRecords(id, celebrate === "1"); // before the early returns: hooks run every render
+  useWorkoutRoom(id); // live likes and comments while this screen is open
   const me = useMe();
   const deleteWorkout = useDeleteWorkout();
 

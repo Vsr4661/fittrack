@@ -1,6 +1,8 @@
 import { Stack } from "expo-router";
+import { useRealtime } from "@/features/realtime/useRealtime";
 
 export default function AppLayout() {
+  useRealtime(); // one live connection for the whole signed-in app
   return (
     <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal" }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

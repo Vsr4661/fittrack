@@ -79,6 +79,12 @@ npm run typecheck -w apps/mobile
 - Server state lives in TanStack Query (use the key factories); Zustand holds only
   client state (session, workout draft). Never copy server data into Zustand.
 - All HTTP goes through `src/lib/api.ts`; features never touch tokens.
+- Sockets: one connection in `src/lib/socket.ts` (the only other token reader).
+  Events are hints applied to the query cache (`features/realtime/`): set
+  absolute values or refetch, never +1 (your own actions echo back as events).
+- Server realtime: publish from services after a successful write via
+  `realtime/publish.ts` (fire-and-forget); every recipient goes through
+  `visibleTo` / `assertWorkoutVisible`, like REST.
 - Every screen handles loading, error (with retry) and empty states.
 - Install native packages with `npx expo install`, never plain `npm i`.
 - Visual rules live in `apps/mobile/DESIGN.md` (read it before UI work; the
