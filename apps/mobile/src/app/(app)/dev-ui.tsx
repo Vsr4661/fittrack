@@ -15,6 +15,8 @@ import {
   WorkoutCardSkeleton,
 } from "@/components/ui";
 import { makeStyles } from "@/theme";
+import LoginScreen from "../(auth)/login";
+import RegisterScreen from "../(auth)/register";
 import { useThemePreference } from "@/theme/themeStore";
 
 /**
@@ -34,6 +36,7 @@ function Gallery() {
     theme?: "light" | "dark" | "system";
     toast?: "success" | "error";
     sheet?: string;
+    preview?: "login" | "register";
   }>();
   const [chip, setChip] = useState("All");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -49,6 +52,12 @@ function Gallery() {
     if (params.toast === "error") toast.error("Couldn't reach the server");
     if (params.sheet) setSheetOpen(true);
   }, [params.toast, params.sheet]);
+
+  // Render auth screens while signed in, for before/after screenshots
+  // without logging the developer out. Buttons work but nothing is submitted
+  // unless you fill the form in.
+  if (params.preview === "login") return <LoginScreen />;
+  if (params.preview === "register") return <RegisterScreen />;
 
   const show = (name: string) => !params.section || params.section === name;
 

@@ -1,18 +1,24 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "expo-router";
+import { useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { StyleSheet, Text } from "react-native";
-import { Button } from "@/components/Button";
-import { Screen } from "@/components/Screen";
-import { TextField } from "@/components/TextField";
+import { Text, type TextInput } from "react-native";
+import { Button, Input } from "@/components/ui";
+import { AuthLayout } from "@/features/auth/components/AuthLayout";
+import { FormErrorBanner } from "@/features/auth/components/FormErrorBanner";
+import { SocialLoginButtons } from "@/features/auth/components/SocialLoginButtons";
 import { useLogin } from "@/features/auth/hooks";
 import { loginSchema, type LoginInput } from "@/features/auth/schemas";
 import { useServerErrors } from "@/features/auth/useServerErrors";
-import { colors } from "@/theme/legacy";
+import { makeStyles } from "@/theme";
 
 const FIELDS = ["email", "password"] as const;
 
 export default function LoginScreen() {
+  const styles = useStyles();
+  const passwordRef = useRef<TextInput>(null);
+
+  // ── Unchanged logic ──────────────────────────────────
   const login = useLogin();
   const { control, handleSubmit, setError, formState } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -22,18 +28,26 @@ export default function LoginScreen() {
 
   // On success, startSession flips auth status and the router guard navigates
   const onSubmit = handleSubmit((values) => login.mutate(values));
+  // ─────────────────────────────────────────────────────
 
   return (
-    <Screen>
-      <Text style={styles.title}>FitTrack</Text>
-      <Text style={styles.subtitle}>Log in to track your training</Text>
-
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Log in to keep your streak going."
+      footer={
+        <Link href="/register" style={styles.footerText}>
+          New here? <Text style={styles.footerLink}>Create an account</Text>
+        </Link>
+      }
+    >
       <Controller
         control={control}
         name="email"
         render={({ field, fieldState }) => (
-          <TextField
+          <Input
             label="Email"
+            icon="mail-outline"
+            placeholder="you@example.com"
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
@@ -42,6 +56,9 @@ export default function LoginScreen() {
             autoComplete="email"
             keyboardType="email-address"
             textContentType="emailAddress"
+            returnKeyType="next" // keyboard's return key jumps to password
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            submitBehavior="submit"
           />
         )}
       />
@@ -49,38 +66,34 @@ export default function LoginScreen() {
         control={control}
         name="password"
         render={({ field, fieldState }) => (
-          <TextField
+          <Input
+            ref={passwordRef}
             label="Password"
+            icon="lock-closed-outline"
+            password
+            placeholder="Your password"
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
             error={fieldState.error?.message}
-            secureTextEntry
             autoComplete="current-password"
             textContentType="password"
+            returnKeyType="go"
             onSubmitEditing={onSubmit}
           />
         )}
       />
 
-      {formState.errors.root ? (
-        <Text style={styles.formError} accessibilityRole="alert">
-          {formState.errors.root.message}
-        </Text>
-      ) : null}
+      <FormErrorBanner message={formState.errors.root?.message} />
 
-      <Button title="Log in" onPress={onSubmit} loading={login.isPending} />
+      <Button title="Log in" size="lg" onPress={onSubmit} loading={login.isPending} />
 
-      <Link href="/register" style={styles.link}>
-        New here? Create an account
-      </Link>
-    </Screen>
+      <SocialLoginButtons />
+    </AuthLayout>
   );
 }
 
-const styles = StyleSheet.create({
-  title: { fontSize: 34, fontWeight: "800", color: colors.text },
-  subtitle: { fontSize: 16, color: colors.textMuted, marginBottom: 8 },
-  formError: { color: colors.danger, fontSize: 14 },
-  link: { color: colors.primary, textAlign: "center", fontSize: 15, padding: 8 },
-});
+const useStyles = makeStyles((t) => ({
+  footerText: { ...t.typography.body, color: t.colors.textMuted, padding: t.spacing.md },
+  footerLink: { ...t.typography.bodyStrong, color: t.colors.primaryText },
+}));

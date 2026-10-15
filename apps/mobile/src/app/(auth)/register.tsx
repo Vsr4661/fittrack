@@ -1,39 +1,63 @@
+import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "expo-router";
+import { useRef } from "react";
 import { Controller, useForm, type Path } from "react-hook-form";
-import { StyleSheet, Text, type TextInputProps } from "react-native";
-import { Button } from "@/components/Button";
-import { Screen } from "@/components/Screen";
-import { TextField } from "@/components/TextField";
+import { Text, type TextInput, type TextInputProps } from "react-native";
+import { Button, Input } from "@/components/ui";
+import { AuthLayout } from "@/features/auth/components/AuthLayout";
+import { FormErrorBanner } from "@/features/auth/components/FormErrorBanner";
+import { SocialLoginButtons } from "@/features/auth/components/SocialLoginButtons";
 import { useRegister } from "@/features/auth/hooks";
 import { registerSchema, type RegisterInput } from "@/features/auth/schemas";
 import { useServerErrors } from "@/features/auth/useServerErrors";
-import { colors } from "@/theme/legacy";
+import { makeStyles } from "@/theme";
 
 const FIELDS = ["displayName", "username", "email", "password"] as const;
 
 // Data-driven fields: four inputs without four copies of the same JSX
-const fieldConfig: { name: Path<RegisterInput>; label: string; props: TextInputProps }[] = [
-  { name: "displayName", label: "Name", props: { autoComplete: "name", textContentType: "name" } },
+const fieldConfig: {
+  name: Path<RegisterInput>;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  placeholder: string;
+  hint?: string;
+  password?: boolean;
+  props: TextInputProps;
+}[] = [
+  { name: "displayName", label: "Name", icon: "person-outline", placeholder: "Alex Johnson", props: { autoComplete: "name", textContentType: "name" } },
   {
     name: "username",
     label: "Username",
+    icon: "at",
+    placeholder: "alex_lifts",
+    hint: "Letters, numbers and underscores",
     props: { autoCapitalize: "none", autoCorrect: false, textContentType: "username" },
   },
   {
     name: "email",
     label: "Email",
+    icon: "mail-outline",
+    placeholder: "you@example.com",
     props: { autoCapitalize: "none", keyboardType: "email-address", autoComplete: "email", textContentType: "emailAddress" },
   },
   {
     name: "password",
     label: "Password",
+    icon: "lock-closed-outline",
+    placeholder: "Create a password",
+    hint: "At least 8 characters",
+    password: true,
     // "newPassword" lets iOS suggest a strong password and save it to the Keychain
-    props: { secureTextEntry: true, autoComplete: "new-password", textContentType: "newPassword" },
+    props: { autoComplete: "new-password", textContentType: "newPassword" },
   },
 ];
 
 export default function RegisterScreen() {
+  const styles = useStyles();
+  const inputRefs = useRef<(TextInput | null)[]>([]);
+
+  // ── Unchanged logic ──────────────────────────────────
   const register = useRegister();
   const { control, handleSubmit, setError, formState } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -42,46 +66,61 @@ export default function RegisterScreen() {
   useServerErrors(register.error, setError, FIELDS);
 
   const onSubmit = handleSubmit((values) => register.mutate(values));
+  // ─────────────────────────────────────────────────────
 
   return (
-    <Screen>
-      <Text style={styles.title}>Create account</Text>
+    <AuthLayout
+      hero="compact"
+      title="Create your account"
+      subtitle="Log workouts, follow friends, beat your PRs."
+      footer={
+        <Link href="/login" style={styles.footerText}>
+          Already have an account? <Text style={styles.footerLink}>Log in</Text>
+        </Link>
+      }
+    >
+      {fieldConfig.map(({ name, label, icon, placeholder, hint, password, props }, i) => {
+        const isLast = i === fieldConfig.length - 1;
+        return (
+          <Controller
+            key={name}
+            control={control}
+            name={name}
+            render={({ field, fieldState }) => (
+              <Input
+                ref={(el) => {
+                  inputRefs.current[i] = el;
+                }}
+                label={label}
+                icon={icon}
+                placeholder={placeholder}
+                hint={hint}
+                password={password}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+                // Return key walks through the fields, and submits on the last one
+                returnKeyType={isLast ? "go" : "next"}
+                submitBehavior={isLast ? "blurAndSubmit" : "submit"}
+                onSubmitEditing={isLast ? onSubmit : () => inputRefs.current[i + 1]?.focus()}
+                {...props}
+              />
+            )}
+          />
+        );
+      })}
 
-      {fieldConfig.map(({ name, label, props }) => (
-        <Controller
-          key={name}
-          control={control}
-          name={name}
-          render={({ field, fieldState }) => (
-            <TextField
-              label={label}
-              value={field.value}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-              error={fieldState.error?.message}
-              {...props}
-            />
-          )}
-        />
-      ))}
+      <FormErrorBanner message={formState.errors.root?.message} />
 
-      {formState.errors.root ? (
-        <Text style={styles.formError} accessibilityRole="alert">
-          {formState.errors.root.message}
-        </Text>
-      ) : null}
+      <Button title="Create account" size="lg" onPress={onSubmit} loading={register.isPending} />
 
-      <Button title="Sign up" onPress={onSubmit} loading={register.isPending} />
-
-      <Link href="/login" style={styles.link}>
-        Already have an account? Log in
-      </Link>
-    </Screen>
+      <SocialLoginButtons />
+    </AuthLayout>
   );
 }
 
-const styles = StyleSheet.create({
-  title: { fontSize: 30, fontWeight: "800", color: colors.text, marginBottom: 8 },
-  formError: { color: colors.danger, fontSize: 14 },
-  link: { color: colors.primary, textAlign: "center", fontSize: 15, padding: 8 },
-});
+const useStyles = makeStyles((t) => ({
+  footerText: { ...t.typography.body, color: t.colors.textMuted, padding: t.spacing.md },
+  footerLink: { ...t.typography.bodyStrong, color: t.colors.primaryText },
+}));
