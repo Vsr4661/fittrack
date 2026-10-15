@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
 import { authorSelect } from "../users/users.select.js";
 import { visibleTo } from "./visibility.js";
+import { volumeGrams, workingSets } from "./volume.js";
 import type { ListWorkoutsQuery, WorkoutInput } from "./workouts.schemas.js";
 
 // ─── Response shapes ───────────────────────────────────
@@ -195,12 +196,11 @@ function nestedExercises(input: WorkoutInput) {
 }
 
 function computeStats(workout: WorkoutRow) {
-  const workingSets = workout.exercises.flatMap((e) => e.sets).filter((s) => !s.isWarmup);
+  const sets = workout.exercises.flatMap((e) => e.sets);
   return {
     exerciseCount: workout.exercises.length,
-    setCount: workingSets.length,
-    // Volume = Σ reps × weight over working sets: the standard training-load metric
-    totalVolumeGrams: workingSets.reduce((sum, s) => sum + (s.reps ?? 0) * (s.weightGrams ?? 0), 0),
+    setCount: workingSets(sets).length,
+    totalVolumeGrams: volumeGrams(sets), // shared definition: see volume.ts
     durationSec: workout.endedAt
       ? Math.round((workout.endedAt.getTime() - workout.startedAt.getTime()) / 1000)
       : null,

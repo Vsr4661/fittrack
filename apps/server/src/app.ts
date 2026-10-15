@@ -10,6 +10,7 @@ import { usersRouter } from "./modules/users/users.routes.js";
 import { exercisesRouter } from "./modules/exercises/exercises.routes.js";
 import { workoutsRouter } from "./modules/workouts/workouts.routes.js";
 import { socialRouter } from "./modules/social/social.routes.js";
+import { statsRouter } from "./modules/stats/stats.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 export function createApp() {
@@ -26,6 +27,7 @@ export function createApp() {
   app.use("/api/v1/exercises", exercisesRouter);
   app.use("/api/v1/workouts", workoutsRouter);
   app.use("/api/v1", socialRouter); // /feed, /workouts/:id/like|comments, /comments/:id
+  app.use("/api/v1", statsRouter); // /progress, /leaderboard
 
   app.use(notFoundHandler);
   app.use(errorHandler);
