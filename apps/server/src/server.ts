@@ -3,16 +3,20 @@ import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/prisma.js";
 import { redis } from "./lib/redis.js";
+import { attachRealtime, closeRealtime } from "./realtime/io.js";
 
 const app = createApp();
 
 const server = app.listen(env.PORT, () => {
   logger.info(`FitTrack API listening on http://localhost:${env.PORT}`);
 });
+attachRealtime(server); // Socket.IO shares the port: ws://localhost:PORT/socket.io/
 
 function shutdown(signal: string) {
   logger.info(`${signal} received, shutting down gracefully`);
-  // Stop accepting requests first, then close connections once in-flight ones finish
+  // Sockets first: an open WebSocket would keep server.close() waiting forever
+  closeRealtime();
+  // Stop accepting requests, then close connections once in-flight ones finish
   server.close(async (err) => {
     await Promise.allSettled([prisma.$disconnect(), redis.quit()]);
     if (err) {
