@@ -10,7 +10,7 @@ import { formatDuration, formatVolume, formatWeight, formatWorkoutDate } from "@
 import { useDeleteWorkout, useWorkout } from "@/features/workouts/hooks";
 import type { Visibility, WorkoutSet } from "@/features/workouts/types";
 import { toApiError } from "@/lib/apiError";
-import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
+import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
 
 const visibilityBadge: Record<Visibility, { label: string; icon: "globe-outline" | "people-outline" | "lock-closed-outline" }> = {
   PUBLIC: { label: "Everyone", icon: "globe-outline" },
@@ -69,7 +69,7 @@ export default function WorkoutDetailScreen() {
         <AuthorRow author={w.author} subtitle={formatWorkoutDate(w.startedAt)} />
 
         <View style={styles.titleBlock}>
-          <Text style={styles.title} accessibilityRole="header">
+          <Text style={styles.title} accessibilityRole="header" maxFontSizeMultiplier={textScale.display}>
             {w.title}
           </Text>
           {/* Privacy is always visible (product principle 3) */}
@@ -93,9 +93,11 @@ export default function WorkoutDetailScreen() {
                   return (
                     <View key={set.id} style={styles.setRow} accessible accessibilityLabel={`${set.isWarmup ? "Warmup set" : `Set ${working}`}: ${describeSet(set)}`}>
                       <View style={[styles.setBadge, set.isWarmup && styles.setBadgeWarmup]}>
-                        <Text style={[styles.setBadgeText, set.isWarmup && styles.setBadgeTextWarmup]}>{set.isWarmup ? "W" : working}</Text>
+                        <Text style={[styles.setBadgeText, set.isWarmup && styles.setBadgeTextWarmup]} maxFontSizeMultiplier={textScale.chrome}>{set.isWarmup ? "W" : working}</Text>
                       </View>
-                      <Text style={styles.setText}>{describeSet(set)}</Text>
+                      <Text style={styles.setText} maxFontSizeMultiplier={textScale.numeric}>
+                        {describeSet(set)}
+                      </Text>
                     </View>
                   );
                 })}
@@ -127,8 +129,14 @@ function Stat({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; la
   return (
     <View style={styles.stat} accessible accessibilityLabel={`${label}: ${value}`}>
       <Ionicons name={icon} size={16} color={colors.textMuted} />
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      {/* A third of the screen wide: one line each, shrinking before it would
+          break mid-word ("Duratio/n") at the largest text sizes */}
+      <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={textScale.display}>
+        {value}
+      </Text>
+      <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={textScale.chrome}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -164,6 +172,7 @@ const useStyles = makeStyles((t) => ({
     alignItems: "center",
     gap: t.spacing.xxs,
     paddingVertical: t.spacing.md,
+    paddingHorizontal: t.spacing.xs,
     borderRadius: t.radius.lg,
     backgroundColor: t.colors.surface,
     ...t.shadows.sm,

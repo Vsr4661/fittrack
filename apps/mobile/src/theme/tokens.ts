@@ -60,6 +60,8 @@ export const textScale = {
 export const gradients = {
   hero: ["#D63F0A", "#B83508", "#9A2C06"] as const,
   heroAccent: "#FF5A1F",
+  /** Text and the logo tile on the hero; the hero is orange in both themes. */
+  onHero: "#FFFFFF",
 };
 
 // ─── Shadows ───────────────────────────────────────────

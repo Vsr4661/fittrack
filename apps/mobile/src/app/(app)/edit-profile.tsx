@@ -1,7 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
+import { usePreventRemove } from "expo-router/react-navigation";
+import { useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView } from "react-native";
+import { Alert, ScrollView } from "react-native";
 import { z } from "zod";
 import { Button, ErrorState, Input, KeyboardScreen, LoadingState, toast } from "@/components/ui";
 import { useMe } from "@/features/auth/hooks";
@@ -37,10 +39,24 @@ function EditProfileForm({ initial }: { initial: EditProfileInput }) {
   });
   useServerErrors(updateMe.error, setError, FIELDS);
 
+  // Unsaved-changes guard: covers the back button, the iOS sheet swipe-down and
+  // Android back. A ref (not state) marks a successful save, because the
+  // router.back() right after it runs before React could re-render with isDirty=false.
+  const navigation = useNavigation();
+  const saved = useRef(false);
+  usePreventRemove(formState.isDirty, ({ data }) => {
+    if (saved.current) return navigation.dispatch(data.action);
+    Alert.alert("Discard changes?", "Your edits to your profile haven't been saved.", [
+      { text: "Keep editing", style: "cancel" },
+      { text: "Discard", style: "destructive", onPress: () => navigation.dispatch(data.action) },
+    ]);
+  });
+
   // Unchanged save flow; a toast confirms it
   const onSubmit = handleSubmit((values) =>
     updateMe.mutate(values, {
       onSuccess: () => {
+        saved.current = true;
         toast.success("Profile updated");
         router.back();
       },

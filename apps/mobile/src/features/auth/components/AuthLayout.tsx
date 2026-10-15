@@ -43,7 +43,7 @@ export function AuthLayout({ title, subtitle, hero = "tall", children, footer }:
           <View style={[styles.blob, styles.blobBottom]} />
 
           <View style={styles.logo} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Ionicons name="barbell" size={hero === "tall" ? 34 : 26} color="#D63F0A" />
+            <Ionicons name="barbell" size={hero === "tall" ? 34 : 26} color={gradients.hero[0]} />
           </View>
           <Text style={[styles.brand, hero === "compact" && styles.brandCompact]} accessibilityRole="header">
             FitTrack
@@ -88,15 +88,15 @@ const useStyles = makeStyles((t) => ({
     width: 64,
     height: 64,
     borderRadius: t.radius.lg,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: gradients.onHero,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: t.spacing.xs,
     ...t.shadows.md,
   },
-  brand: { ...t.typography.display, color: "#FFFFFF" },
+  brand: { ...t.typography.display, color: gradients.onHero },
   brandCompact: { fontSize: 26, lineHeight: 32 },
-  tagline: { ...t.typography.bodyStrong, color: "#FFFFFF" },
+  tagline: { ...t.typography.bodyStrong, color: gradients.onHero },
   cardGutter: { marginTop: -t.spacing.xxxl, paddingHorizontal: t.spacing.lg },
   card: {
     padding: t.spacing.xl,

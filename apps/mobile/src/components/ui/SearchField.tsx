@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, TextInput, View, type TextInputProps } from "react-native";
-import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
+import { Pressable, TextInput, useWindowDimensions, View, type TextInputProps } from "react-native";
+import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
 
 interface SearchFieldProps extends Pick<TextInputProps, "autoFocus" | "returnKeyType"> {
   value: string;
@@ -14,9 +14,11 @@ interface SearchFieldProps extends Pick<TextInputProps, "autoFocus" | "returnKey
 export function SearchField({ value, onChangeText, placeholder, accessibilityLabel, ...props }: SearchFieldProps) {
   const styles = useStyles();
   const { colors } = useTheme();
+  // Icons don't follow Dynamic Type on their own; scale them with the text (capped)
+  const iconSize = Math.round(18 * Math.min(useWindowDimensions().fontScale, textScale.chrome));
   return (
     <View style={styles.field}>
-      <Ionicons name="search" size={18} color={colors.textMuted} />
+      <Ionicons name="search" size={iconSize} color={colors.textMuted} />
       <TextInput
         {...props}
         style={styles.input}
@@ -32,7 +34,7 @@ export function SearchField({ value, onChangeText, placeholder, accessibilityLab
       {value.length > 0 ? (
         // Our own clear button (iOS's clearButtonMode doesn't exist on Android)
         <Pressable onPress={() => onChangeText("")} hitSlop={10} style={styles.clear} accessibilityRole="button" accessibilityLabel="Clear search">
-          <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          <Ionicons name="close-circle" size={iconSize} color={colors.textMuted} />
         </Pressable>
       ) : null}
     </View>
