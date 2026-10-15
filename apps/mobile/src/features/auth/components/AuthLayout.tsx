@@ -1,8 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Logo } from "@/components/ui/Logo";
 import { gradients, makeStyles } from "@/theme";
 
 interface AuthLayoutProps {
@@ -43,7 +43,8 @@ export function AuthLayout({ title, subtitle, hero = "tall", children, footer }:
           <View style={[styles.blob, styles.blobBottom]} />
 
           <View style={styles.logo} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Ionicons name="barbell" size={hero === "tall" ? 34 : 26} color={gradients.hero[0]} />
+            {/* The app-icon mark, so the logo you land on matches the icon you tapped */}
+            <Logo size={hero === "tall" ? 44 : 34} color={gradients.hero[0]} />
           </View>
           <Text style={[styles.brand, hero === "compact" && styles.brandCompact]} accessibilityRole="header">
             FitTrack

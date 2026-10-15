@@ -12,6 +12,7 @@ export { Input } from "./Input";
 export { KeyboardScreen } from "./KeyboardScreen";
 export { LargeTitle, USE_LARGE_TITLE } from "./LargeTitle";
 export { LoadingState } from "./LoadingState";
+export { Logo } from "./Logo";
 export { PressableScale } from "./PressableScale";
 export { SearchField } from "./SearchField";
 export { ProgressRing } from "./ProgressRing";
