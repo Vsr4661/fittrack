@@ -52,6 +52,8 @@ model User {
 
   workouts        Workout[]
   refreshTokens   RefreshToken[]
+  likes           Like[]
+  comments        Comment[]
   customExercises Exercise[]
   followers       Follow[]       @relation("following")
   following       Follow[]       @relation("follower")
@@ -127,6 +129,8 @@ model Workout {
 
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   exercises WorkoutExercise[]
+  likes     Like[]
+  comments  Comment[]
 
   // Serves "a user's workouts, newest first" (profile page + feed fan-in)
   @@index([userId, startedAt(sort: Desc)])
@@ -165,4 +169,37 @@ model WorkoutSet {
 
   @@unique([workoutExerciseId, setNumber])
   @@map("workout_sets")
+}
+
+// ─── Social: likes & comments ──────────────────────────
+
+model Like {
+  userId    String   @db.Uuid
+  workoutId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  // Composite PK: one like per user per workout, enforced by the database,
+  // so a double-tap or a retried request can never create a second like
+  @@id([userId, workoutId])
+  @@index([workoutId]) // "how many likes does this workout have?"
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  workoutId String   @db.Uuid
+  userId    String   @db.Uuid
+  body      String
+  createdAt DateTime @default(now())
+
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // UUIDv7 ids are time-ordered, so (workoutId, id) also orders by creation time
+  @@index([workoutId, id])
+  @@index([userId])
+  @@map("comments")
 }

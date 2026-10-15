@@ -1,6 +1,9 @@
 import type { Prisma } from "../../generated/prisma/client.js";
+import { cacheKeys, invalidate } from "../../lib/cache.js";
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
+import { authorSelect } from "../users/users.select.js";
+import { visibleTo } from "./visibility.js";
 import type { ListWorkoutsQuery, WorkoutInput } from "./workouts.schemas.js";
 
 // ─── Response shapes ───────────────────────────────────
@@ -17,41 +20,77 @@ const setSelect = {
   isWarmup: true,
 } as const;
 
-const workoutDetailSelect = {
-  id: true,
-  userId: true,
-  title: true,
-  notes: true,
-  visibility: true,
-  startedAt: true,
-  endedAt: true,
-  createdAt: true,
-  exercises: {
-    orderBy: { position: "asc" },
-    select: {
-      id: true,
-      position: true,
-      notes: true,
-      exercise: { select: exerciseSummarySelect },
-      sets: { orderBy: { setNumber: "asc" }, select: setSelect },
+/** Depends on the viewer because "did I like this?" is per-viewer. */
+function workoutSelect(viewerId: string) {
+  return {
+    id: true,
+    userId: true,
+    title: true,
+    notes: true,
+    visibility: true,
+    startedAt: true,
+    endedAt: true,
+    createdAt: true,
+    user: { select: authorSelect },
+    // Counted by the database in the same query: no N+1 round-trips per workout
+    _count: { select: { likes: true, comments: true } },
+    // At most one row: did *this viewer* like it?
+    likes: { where: { userId: viewerId }, select: { userId: true }, take: 1 },
+    exercises: {
+      orderBy: { position: "asc" },
+      select: {
+        id: true,
+        position: true,
+        notes: true,
+        exercise: { select: exerciseSummarySelect },
+        sets: { orderBy: { setNumber: "asc" }, select: setSelect },
+      },
     },
-  },
-} satisfies Prisma.WorkoutSelect;
+  } satisfies Prisma.WorkoutSelect;
+}
 
-type WorkoutDetail = Prisma.WorkoutGetPayload<{ select: typeof workoutDetailSelect }>;
+type WorkoutRow = Prisma.WorkoutGetPayload<{ select: ReturnType<typeof workoutSelect> }>;
 
 // ─── Queries ───────────────────────────────────────────
 
-/** Cursor-paginated history, newest first. */
-export async function listMyWorkouts(userId: string, { limit, cursor }: ListWorkoutsQuery) {
+export function listMyWorkouts(viewerId: string, page: ListWorkoutsQuery) {
+  return listWorkouts(viewerId, { userId: viewerId }, page);
+}
+
+/** Someone's profile: only the workouts this viewer is allowed to see. */
+export function listUserWorkouts(viewerId: string, ownerId: string, page: ListWorkoutsQuery) {
+  return listWorkouts(viewerId, { AND: [{ userId: ownerId }, visibleTo(viewerId)] }, page);
+}
+
+/**
+ * Fan-out on READ: the feed is computed when it's opened, by querying the
+ * workouts of everyone I follow. Simple and always consistent; at large scale
+ * (users following thousands) you'd switch to fan-out on WRITE, pushing each
+ * new workout id into followers' precomputed feeds (e.g. Redis lists).
+ */
+export function listFeed(viewerId: string, page: ListWorkoutsQuery) {
+  return listWorkouts(
+    viewerId,
+    {
+      AND: [
+        { OR: [{ userId: viewerId }, { user: { followers: { some: { followerId: viewerId } } } }] },
+        visibleTo(viewerId),
+      ],
+    },
+    page,
+  );
+}
+
+/** Cursor-paginated, newest first. */
+async function listWorkouts(viewerId: string, where: Prisma.WorkoutWhereInput, { limit, cursor }: ListWorkoutsQuery) {
   const rows = await prisma.workout.findMany({
-    where: { userId },
+    where,
     // startedAt matches the (userId, startedAt DESC) index; id breaks ties so
     // the order is fully deterministic, which cursor pagination requires.
     orderBy: [{ startedAt: "desc" }, { id: "desc" }],
     take: limit + 1, // fetch one extra to know if another page exists
     ...(cursor && { cursor: { id: cursor }, skip: 1 }),
-    select: workoutDetailSelect,
+    select: workoutSelect(viewerId),
   });
 
   const hasMore = rows.length > limit;
@@ -63,16 +102,19 @@ export async function listMyWorkouts(userId: string, { limit, cursor }: ListWork
 }
 
 export async function getWorkout(viewerId: string, workoutId: string) {
-  const workout = await prisma.workout.findUnique({
-    where: { id: workoutId },
-    select: workoutDetailSelect,
+  const workout = await prisma.workout.findFirst({
+    where: { AND: [{ id: workoutId }, visibleTo(viewerId)] },
+    select: workoutSelect(viewerId),
   });
-  // 404 (not 403) for other people's private workouts: don't confirm they exist.
-  // FOLLOWERS visibility gets real follower checks in the social phase.
-  if (!workout || (workout.userId !== viewerId && workout.visibility !== "PUBLIC")) {
-    throw AppError.notFound("Workout not found");
-  }
-  return { ...workout, stats: computeStats(workout) };
+  // 404 (not 403) for workouts you can't see: don't confirm they exist
+  if (!workout) throw AppError.notFound("Workout not found");
+  return toDetail(workout);
+}
+
+/** For likes/comments: you can only interact with workouts you can see. */
+export async function assertWorkoutVisible(viewerId: string, workoutId: string) {
+  const count = await prisma.workout.count({ where: { AND: [{ id: workoutId }, visibleTo(viewerId)] } });
+  if (count === 0) throw AppError.notFound("Workout not found");
 }
 
 // ─── Mutations ─────────────────────────────────────────
@@ -84,9 +126,10 @@ export async function createWorkout(userId: string, input: WorkoutInput) {
   // exercise and set) is saved, or nothing is. No half-saved workouts.
   const workout = await prisma.workout.create({
     data: { userId, ...workoutScalars(input), exercises: { create: nestedExercises(input) } },
-    select: workoutDetailSelect,
+    select: workoutSelect(userId),
   });
-  return { ...workout, stats: computeStats(workout) };
+  await invalidate(cacheKeys.profileCounts(userId)); // workout count changed
+  return toDetail(workout);
 }
 
 /** PUT semantics: the client sends the whole workout and it replaces what's stored. */
@@ -105,16 +148,17 @@ export async function replaceWorkout(userId: string, workoutId: string, input: W
     return tx.workout.update({
       where: { id: workoutId },
       data: { exercises: { create: nestedExercises(input) } },
-      select: workoutDetailSelect,
+      select: workoutSelect(userId),
     });
   });
-  return { ...workout, stats: computeStats(workout) };
+  return toDetail(workout);
 }
 
 export async function deleteWorkout(userId: string, workoutId: string) {
-  // Exercises and sets go too, via ON DELETE CASCADE
+  // Exercises, sets, likes and comments go too, via ON DELETE CASCADE
   const { count } = await prisma.workout.deleteMany({ where: { id: workoutId, userId } });
   if (count === 0) throw AppError.notFound("Workout not found");
+  await invalidate(cacheKeys.profileCounts(userId));
 }
 
 // ─── Helpers ───────────────────────────────────────────
@@ -150,7 +194,7 @@ function nestedExercises(input: WorkoutInput) {
   }));
 }
 
-function computeStats(workout: WorkoutDetail) {
+function computeStats(workout: WorkoutRow) {
   const workingSets = workout.exercises.flatMap((e) => e.sets).filter((s) => !s.isWarmup);
   return {
     exerciseCount: workout.exercises.length,
@@ -163,15 +207,30 @@ function computeStats(workout: WorkoutDetail) {
   };
 }
 
-/** List rows don't need every set, just enough for a history card. */
-function toSummary(workout: WorkoutDetail) {
+function toSocial(workout: WorkoutRow) {
+  return {
+    likeCount: workout._count.likes,
+    commentCount: workout._count.comments,
+    likedByMe: workout.likes.length > 0,
+  };
+}
+
+function toDetail(workout: WorkoutRow) {
+  const { user, _count, likes, ...rest } = workout;
+  return { ...rest, author: user, stats: computeStats(workout), social: toSocial(workout) };
+}
+
+/** List rows don't need every set, just enough for a feed/history card. */
+function toSummary(workout: WorkoutRow) {
   return {
     id: workout.id,
     title: workout.title,
     visibility: workout.visibility,
     startedAt: workout.startedAt,
     endedAt: workout.endedAt,
+    author: workout.user,
     exerciseNames: workout.exercises.map((e) => e.exercise.name),
     stats: computeStats(workout),
+    social: toSocial(workout),
   };
 }
