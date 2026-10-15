@@ -5,7 +5,7 @@ import { Card } from "@/components/ui";
 import { AuthorRow } from "@/features/social/components/AuthorRow";
 import { LikeButton } from "@/features/social/components/LikeButton";
 import { makeStyles, useTheme } from "@/theme";
-import { formatDuration, formatVolume, formatWorkoutDate } from "../format";
+import { formatDuration, formatWorkoutDate, loadStat } from "../format";
 import type { WorkoutSummary } from "../types";
 
 interface WorkoutCardProps {
@@ -47,7 +47,7 @@ export function WorkoutCard({ workout, showAuthor = false }: WorkoutCardProps) {
       <View style={styles.stats}>
         {stats.durationSec !== null ? <Stat icon="time-outline" value={formatDuration(stats.durationSec)} label="Time" /> : null}
         <Stat icon="layers-outline" value={String(stats.setCount)} label="Sets" />
-        <Stat icon="barbell-outline" value={formatVolume(stats.totalVolumeGrams)} label="Volume" />
+        <Stat icon={loadStat(stats).icon} value={loadStat(stats).value} label={loadStat(stats).label} />
       </View>
 
       <View style={styles.footer}>

@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { ActionSheet, Badge, Button, Card } from "@/components/ui";
 import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
 import type { DraftExercise, DraftSet } from "../draftStore";
-import { muscleLabel } from "../format";
+import { isCardio, muscleLabel } from "../format";
 import { DONE_COL, SET_COL, SetRow } from "./SetRow";
 
 interface ExerciseCardProps {
@@ -22,6 +22,7 @@ export function ExerciseCard({ entry, onAddSet, onUpdateSet, onRemoveSet, onRemo
   const { colors } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const done = entry.sets.filter((s) => s.done).length;
+  const cardio = isCardio(entry.exercise);
 
   return (
     <Card>
@@ -49,8 +50,8 @@ export function ExerciseCard({ entry, onAddSet, onUpdateSet, onRemoveSet, onRemo
       {/* Column labels, aligned with the inputs below */}
       <View style={styles.columns} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <Text style={[styles.columnLabel, { width: SET_COL }]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>SET</Text>
-        <Text style={[styles.columnLabel, styles.flex]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>KG</Text>
-        <Text style={[styles.columnLabel, styles.flex]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>REPS</Text>
+        <Text style={[styles.columnLabel, styles.flex]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>{cardio ? "KM" : "KG"}</Text>
+        <Text style={[styles.columnLabel, styles.flex]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>{cardio ? "TIME" : "REPS"}</Text>
         <View style={{ width: DONE_COL }} />
       </View>
 
@@ -63,6 +64,7 @@ export function ExerciseCard({ entry, onAddSet, onUpdateSet, onRemoveSet, onRemo
             onChange={(patch) => onUpdateSet(set.key, patch)}
             onRemove={() => onRemoveSet(set.key)}
             onComplete={onSetCompleted}
+            cardio={cardio}
           />
         ))}
       </View>

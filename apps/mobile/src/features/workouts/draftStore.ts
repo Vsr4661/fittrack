@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { defaultWorkoutTitle, parseKgToGrams, parseReps } from "./format";
+import { defaultWorkoutTitle, isCardio, parseDuration, parseKgToGrams, parseKmToMeters, parseReps } from "./format";
 import type { Exercise, Visibility, WorkoutInput } from "./types";
 
 // Inputs are kept as the strings the user typed ("82,5", ""), and only converted
@@ -9,8 +9,13 @@ import type { Exercise, Visibility, WorkoutInput } from "./types";
 // e.g. turning "82." into 82 before they can type the 5.
 export interface DraftSet {
   key: string;
+  // Strength exercises fill reps + weight; cardio fills distance + duration.
+  // One shape for both keeps every store action the same for every exercise.
   reps: string;
   weightKg: string;
+  distanceKm: string;
+  /** As typed: "30", "28:30" or "1:05:00" (see parseDuration). */
+  duration: string;
   isWarmup: boolean;
   /** Ticked off in the gym. Client-only UI state: never sent to the API. */
   done: boolean;
@@ -44,7 +49,7 @@ interface DraftState {
 
 let keySeq = 0;
 const newKey = () => `${Date.now().toString(36)}-${(keySeq++).toString(36)}`;
-const emptySet = (): DraftSet => ({ key: newKey(), reps: "", weightKg: "", isWarmup: false, done: false });
+const emptySet = (): DraftSet => ({ key: newKey(), reps: "", weightKg: "", distanceKm: "", duration: "", isWarmup: false, done: false });
 
 /** Immutable update of one exercise inside the draft. */
 function mapExercise(draft: WorkoutDraft, exerciseKey: string, fn: (e: DraftExercise) => DraftExercise): WorkoutDraft {
@@ -110,7 +115,7 @@ export const useWorkoutDraft = create<DraftState>()(
       partialize: (state) => ({ draft: state.draft }), // persist data, not functions
       // Bump `version` whenever the saved shape changes, and upgrade old data in
       // `migrate`. A draft saved by an older app version must still load.
-      version: 2,
+      version: 3,
       migrate: migrateDraft,
     },
   ),
@@ -121,6 +126,7 @@ export const useWorkoutDraft = create<DraftState>()(
  * draft from ANY old version reaches the current shape:
  *   v0 -> v1: no `visibility` (Phase 4)    -> default PUBLIC, as the server does
  *   v1 -> v2: sets had no `done` flag       -> false
+ *   v2 -> v3: sets had no cardio fields     -> distanceKm/duration ""
  */
 export function migrateDraft(persisted: unknown, version: number): { draft: WorkoutDraft | null } {
   // Old shapes are untyped by definition, so treat them loosely and build the new one
@@ -137,7 +143,34 @@ export function migrateDraft(persisted: unknown, version: number): { draft: Work
       exercises: (draft.exercises ?? []).map((e) => ({ ...e, sets: (e.sets ?? []).map((set) => ({ ...set, done: false })) })),
     };
   }
+  if (draft && version < 3) {
+    draft = {
+      ...draft,
+      exercises: (draft.exercises ?? []).map((e) => ({
+        ...e,
+        sets: (e.sets ?? []).map((set) => ({ ...set, distanceKm: set.distanceKm ?? "", duration: set.duration ?? "" })),
+      })),
+    };
+  }
   return { draft: draft as unknown as WorkoutDraft | null };
+}
+
+type ApiSet = WorkoutInput["exercises"][number]["sets"][number];
+
+/** A cardio row -> API set; "blank" for an untouched row, or an error message. */
+function parseCardioSet(set: DraftSet, where: string): ApiSet | "blank" | string {
+  const distance = set.distanceKm.trim();
+  const time = set.duration.trim();
+  if (distance === "" && time === "") return "blank";
+
+  const distanceM = distance === "" ? undefined : parseKmToMeters(distance);
+  if (distanceM === null) return `${where}: "${set.distanceKm}" isn't a valid distance in km.`;
+  const durationSec = time === "" ? undefined : parseDuration(time);
+  if (durationSec === null) return `${where}: enter the time as minutes ("30") or min:sec ("28:30").`;
+  // Either one is enough (a treadmill run with no distance, or a timed row), but not zeros
+  if (!distanceM && !durationSec) return `${where}: enter a distance or a time.`;
+
+  return { ...(distanceM ? { distanceM } : {}), ...(durationSec ? { durationSec } : {}), isWarmup: set.isWarmup };
 }
 
 export type DraftResult = { ok: true; input: WorkoutInput } | { ok: false; error: string };
@@ -155,6 +188,13 @@ export function draftToInput(draft: WorkoutDraft, endedAt: Date = new Date()): D
     const parsedSets: WorkoutInput["exercises"][number]["sets"] = [];
 
     for (const [i, set] of sets.entries()) {
+      if (isCardio(exercise)) {
+        const parsed = parseCardioSet(set, `${exercise.name}, set ${i + 1}`);
+        if (parsed === "blank") continue; // untouched row
+        if (typeof parsed === "string") return { ok: false, error: parsed };
+        parsedSets.push(parsed);
+        continue;
+      }
       if (set.reps.trim() === "" && set.weightKg.trim() === "") continue; // untouched row
       const reps = parseReps(set.reps);
       if (reps === null || reps === 0) {

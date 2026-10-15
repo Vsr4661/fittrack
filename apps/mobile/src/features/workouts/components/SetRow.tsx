@@ -14,6 +14,8 @@ interface SetRowProps {
   onRemove: () => void;
   /** Called when the set is ticked off (starts the rest timer). */
   onComplete: () => void;
+  /** Cardio rows log distance + time instead of weight + reps. */
+  cardio?: boolean;
 }
 
 /** Column widths shared with the header row in ExerciseCard, so they line up. */
@@ -21,19 +23,20 @@ export const SET_COL = 44;
 export const DONE_COL = MIN_TOUCH;
 
 /**
- * One set: [set # / warmup] [kg] [reps] [✓]. Swipe left to delete.
+ * One set: [set # / warmup] [kg] [reps] [✓], or [km] [time] for cardio. Swipe left to delete.
  * Sized for the gym: big inputs and 44pt+ targets you can hit with sweaty
  * hands between sets.
  */
-export function SetRow({ number, set, onChange, onRemove, onComplete }: SetRowProps) {
+export function SetRow({ number, set, onChange, onRemove, onComplete, cardio = false }: SetRowProps) {
   const styles = useStyles();
   const { colors } = useTheme();
   const label = set.isWarmup ? "Warmup set" : `Set ${number}`;
 
   const toggleDone = () => {
-    if (!set.done && set.reps.trim() === "") {
+    const empty = cardio ? set.distanceKm.trim() === "" && set.duration.trim() === "" : set.reps.trim() === "";
+    if (!set.done && empty) {
       haptics.warning();
-      toast.info("Enter reps first, then tick the set off");
+      toast.info(cardio ? "Enter a distance or time first, then tick the set off" : "Enter reps first, then tick the set off");
       return;
     }
     const done = !set.done;
@@ -86,28 +89,59 @@ export function SetRow({ number, set, onChange, onRemove, onComplete }: SetRowPr
           <Text style={[styles.badgeText, set.isWarmup && styles.badgeTextWarmup]} maxFontSizeMultiplier={textScale.chrome}>{set.isWarmup ? "W" : number}</Text>
         </Pressable>
 
-        <TextInput
-          style={[styles.input, set.done && styles.inputDone]}
-          value={set.weightKg}
-          onChangeText={(weightKg) => onChange({ weightKg })}
-          placeholder="—"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="decimal-pad"
-          maxFontSizeMultiplier={textScale.numeric}
-          selectTextOnFocus // tap once to overwrite the copied value
-          accessibilityLabel={`${label} weight in kilograms`}
-        />
-        <TextInput
-          style={[styles.input, set.done && styles.inputDone]}
-          value={set.reps}
-          onChangeText={(reps) => onChange({ reps })}
-          placeholder="—"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="number-pad"
-          maxFontSizeMultiplier={textScale.numeric}
-          selectTextOnFocus
-          accessibilityLabel={`${label} reps`}
-        />
+        {cardio ? (
+          <>
+            <TextInput
+              style={[styles.input, set.done && styles.inputDone]}
+              value={set.distanceKm}
+              onChangeText={(distanceKm) => onChange({ distanceKm })}
+              placeholder="—"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="decimal-pad"
+              maxFontSizeMultiplier={textScale.numeric}
+              selectTextOnFocus
+              accessibilityLabel={`${label} distance in kilometres`}
+            />
+            <TextInput
+              style={[styles.input, set.done && styles.inputDone]}
+              value={set.duration}
+              onChangeText={(duration) => onChange({ duration })}
+              placeholder="mm:ss"
+              placeholderTextColor={colors.textMuted}
+              // numbers-and-punctuation has ":" on iOS; Android's numeric pad
+              // has no colon, so whole minutes ("30") work there too
+              keyboardType="numbers-and-punctuation"
+              maxFontSizeMultiplier={textScale.numeric}
+              selectTextOnFocus
+              accessibilityLabel={`${label} time, in minutes or minutes and seconds`}
+            />
+          </>
+        ) : (
+          <>
+            <TextInput
+              style={[styles.input, set.done && styles.inputDone]}
+              value={set.weightKg}
+              onChangeText={(weightKg) => onChange({ weightKg })}
+              placeholder="—"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="decimal-pad"
+              maxFontSizeMultiplier={textScale.numeric}
+              selectTextOnFocus // tap once to overwrite the copied value
+              accessibilityLabel={`${label} weight in kilograms`}
+            />
+            <TextInput
+              style={[styles.input, set.done && styles.inputDone]}
+              value={set.reps}
+              onChangeText={(reps) => onChange({ reps })}
+              placeholder="—"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="number-pad"
+              maxFontSizeMultiplier={textScale.numeric}
+              selectTextOnFocus
+              accessibilityLabel={`${label} reps`}
+            />
+          </>
+        )}
 
         <Pressable
           onPress={toggleDone}

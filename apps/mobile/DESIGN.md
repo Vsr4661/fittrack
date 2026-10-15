@@ -397,8 +397,10 @@ arc that fills over 900ms (ease-out cubic), instant under Reduce Motion. Its
 center number is a tabular Number and the ring scales with the text size.
 
 ### Set Row (signature)
-The mid-workout row: set number (or "W" for warmups, in Warmup Amber), weight
-and reps inputs in large tabular figures, and a completion tick. Completing a
+The mid-workout row: set number (or "W" for warmups, in Warmup Amber), two
+inputs in large tabular figures (weight and reps, or distance and time for a
+Cardio exercise, with the column labels switching to KM / TIME), and a
+completion tick. Completing a
 set fills the row with Done Wash and fires a haptic; swiping left reveals Delete.
 
 ### Weekly Bar Chart (signature)

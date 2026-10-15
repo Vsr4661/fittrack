@@ -7,7 +7,7 @@ import { AuthorRow } from "@/features/social/components/AuthorRow";
 import { CommentsSection } from "@/features/social/components/CommentsSection";
 import { NewRecordBanner, useNewRecords } from "@/features/stats/components/NewRecordBanner";
 import { LikeButton } from "@/features/social/components/LikeButton";
-import { formatDuration, formatVolume, formatWeight, formatWorkoutDate } from "@/features/workouts/format";
+import { formatClock, formatDistance, formatDuration, formatWeight, formatWorkoutDate, loadStat } from "@/features/workouts/format";
 import { useDeleteWorkout, useWorkout } from "@/features/workouts/hooks";
 import type { Visibility, WorkoutSet } from "@/features/workouts/types";
 import { toApiError } from "@/lib/apiError";
@@ -81,7 +81,7 @@ export default function WorkoutDetailScreen() {
 
         <View style={styles.stats}>
           {w.stats.durationSec !== null ? <Stat icon="time-outline" label="Duration" value={formatDuration(w.stats.durationSec)} /> : null}
-          <Stat icon="barbell-outline" label="Volume" value={formatVolume(w.stats.totalVolumeGrams)} />
+          <Stat icon={loadStat(w.stats).icon} label={loadStat(w.stats).label} value={loadStat(w.stats).value} />
           <Stat icon="layers-outline" label="Sets" value={String(w.stats.setCount)} />
         </View>
 
@@ -124,7 +124,10 @@ export default function WorkoutDetailScreen() {
 function describeSet(set: WorkoutSet): string {
   if (set.reps !== null && set.weightGrams !== null) return `${formatWeight(set.weightGrams)} × ${set.reps}`;
   if (set.reps !== null) return `${set.reps} reps`;
-  if (set.durationSec !== null) return formatDuration(set.durationSec);
+  // Cardio: "5.2 km in 28:30". The clock format keeps the seconds a runner cares about
+  if (set.distanceM !== null && set.durationSec !== null) return `${formatDistance(set.distanceM)} in ${formatClock(set.durationSec)}`;
+  if (set.distanceM !== null) return formatDistance(set.distanceM);
+  if (set.durationSec !== null) return formatClock(set.durationSec);
   return "—";
 }
 

@@ -10,6 +10,28 @@ export function parseKgToGrams(input: string): number | null {
   return Math.round(Number(normalized) * 1000);
 }
 
+/** "5.2" or "5,2" km -> 5200 m. Returns null if not a valid distance. */
+export function parseKmToMeters(input: string): number | null {
+  const normalized = input.trim().replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(normalized)) return null;
+  return Math.round(Number(normalized) * 1000);
+}
+
+/**
+ * What people actually type for a duration, -> seconds:
+ *   "30" = 30 minutes · "28:30" = 28 min 30 s · "1:05:00" = 1 h 5 min.
+ * Seconds/minutes after a colon must be 00-59 ("28:75" is a typo, not 29:15).
+ */
+export function parseDuration(input: string): number | null {
+  const t = input.trim();
+  if (/^\d+$/.test(t)) return Number(t) * 60;
+  const mmss = /^(\d+):([0-5]\d)$/.exec(t);
+  if (mmss) return Number(mmss[1]) * 60 + Number(mmss[2]);
+  const hmmss = /^(\d+):([0-5]\d):([0-5]\d)$/.exec(t);
+  if (hmmss) return Number(hmmss[1]) * 3600 + Number(hmmss[2]) * 60 + Number(hmmss[3]);
+  return null;
+}
+
 export function parseReps(input: string): number | null {
   const trimmed = input.trim();
   if (!/^\d+$/.test(trimmed)) return null;
@@ -24,6 +46,24 @@ export function formatWeight(grams: number): string {
 /** Big totals read better rounded: 2_340_500 g -> "2,341 kg" */
 export function formatVolume(grams: number): string {
   return `${Math.round(grams / 1000).toLocaleString("en-US")} kg`;
+}
+
+/** 5200 -> "5.2 km", 800 -> "800 m" */
+export function formatDistance(meters: number): string {
+  return meters < 1000 ? `${meters} m` : `${Number((meters / 1000).toFixed(2))} km`;
+}
+
+/** Cardio exercises log distance and time; everything else logs weight and reps. */
+export const isCardio = (exercise: { muscleGroup: MuscleGroup }) => exercise.muscleGroup === "CARDIO";
+
+/**
+ * The load tile for a workout: volume for lifting, distance for a pure-cardio
+ * workout (a run would otherwise read "0 kg"). Mixed workouts keep volume.
+ */
+export function loadStat(stats: { totalVolumeGrams: number; totalDistanceM: number }) {
+  return stats.totalVolumeGrams === 0 && stats.totalDistanceM > 0
+    ? { label: "Distance", value: formatDistance(stats.totalDistanceM), icon: "navigate-outline" as const }
+    : { label: "Volume", value: formatVolume(stats.totalVolumeGrams), icon: "barbell-outline" as const };
 }
 
 /** 3725 -> "1h 2m", 540 -> "9m", 45 -> "45s" */

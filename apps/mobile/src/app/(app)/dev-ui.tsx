@@ -40,7 +40,7 @@ function Gallery() {
     toast?: "success" | "error";
     sheet?: string;
     preview?: "login" | "register";
-    seed?: "workout";
+    seed?: "workout" | "cardio";
   }>();
   const exercises = useExercises();
   const [chip, setChip] = useState("All");
@@ -82,6 +82,24 @@ function Gallery() {
     d.updateSet(b!.key, b3.key, { weightKg: "82.5", reps: "", done: false });
     d.updateSet(s!.key, s!.sets[0]!.key, { weightKg: "100", reps: "5" });
     useRestTimer.getState().start(75);
+    router.replace("/workout/new");
+  }, [params.seed, exercises.data]);
+
+  // seed=cardio: a run in progress (distance + time rows), to check the cardio logger. Dev only.
+  useEffect(() => {
+    if (params.seed !== "cardio" || !exercises.data) return;
+    const running = exercises.data.find((e) => e.name === "Running");
+    if (!running) return;
+    const d = useWorkoutDraft.getState();
+    d.discard();
+    d.start();
+    d.setTitle("Morning run");
+    d.addExercise(running);
+    const r = useWorkoutDraft.getState().draft!.exercises[0]!;
+    d.updateSet(r.key, r.sets[0]!.key, { distanceKm: "1", duration: "8:00", isWarmup: true, done: true });
+    d.addSet(r.key);
+    const r2 = useWorkoutDraft.getState().draft!.exercises[0]!.sets[1]!;
+    d.updateSet(r.key, r2.key, { distanceKm: "5.2", duration: "28:30", isWarmup: false, done: false });
     router.replace("/workout/new");
   }, [params.seed, exercises.data]);
 

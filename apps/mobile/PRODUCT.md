@@ -50,14 +50,16 @@ fastest focused logger). Future work must not invent a positioning claim.
 ## Capabilities and Constraints
 
 - **Built:** email/password accounts; strength logging (weight x reps,
-  warmup sets); exercise catalog; workout history and detail; visibility;
+  warmup sets); cardio logging (distance + time, for exercises in the Cardio
+  group); exercise catalog; workout history and detail; visibility;
   follows, feed, likes, comments, search, profiles, edit profile; streak and
-  weekly goal (computed on-device); rest timer; light/dark/system theme.
-- **API supports, app does not yet:** time and distance sets. Cardio
-  exercises are currently hidden in the logger. Given the "all activities"
-  audience, this is a known gap, not a deliberate exclusion.
-- **Not built yet:** Progress (charts, personal records) and Leaderboard need
-  new read-only API endpoints; Apple/Google sign-in is shown as "Coming soon"
+  weekly goal (computed on-device); rest timer; Progress (12-week chart,
+  personal records) and Leaderboard (you + people you follow);
+  light/dark/system theme.
+- **Known gaps:** timed non-cardio exercises (e.g. Plank) still log reps;
+  personal records cover weighted sets only (no cardio pace or bodyweight
+  records yet); classes have no dedicated logging.
+- **Not built yet:** Apple/Google sign-in is shown as "Coming soon"
   and does nothing; real-time updates, photo uploads, push notifications and a
   paid tier (Stripe) are planned later phases.
 - **Units:** kilograms only (stored as integer grams). No lb setting yet.

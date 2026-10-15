@@ -27,6 +27,8 @@ export interface WorkoutStats {
   exerciseCount: number;
   setCount: number;
   totalVolumeGrams: number;
+  /** Working-set distance: cardio's counterpart to volume. */
+  totalDistanceM: number;
   durationSec: number | null;
 }
 
@@ -77,5 +79,8 @@ export interface WorkoutInput {
   startedAt: string;
   endedAt?: string;
   visibility: Visibility;
-  exercises: { exerciseId: string; sets: { reps?: number; weightGrams?: number; isWarmup?: boolean }[] }[];
+  exercises: {
+    exerciseId: string;
+    sets: { reps?: number; weightGrams?: number; durationSec?: number; distanceM?: number; isWarmup?: boolean }[];
+  }[];
 }

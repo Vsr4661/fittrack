@@ -1,8 +1,20 @@
 import { draftToInput, migrateDraft, useWorkoutDraft, type WorkoutDraft } from "@/features/workouts/draftStore";
-import { formatClock, formatDuration, formatVolume, formatWeight, parseKgToGrams, parseReps } from "@/features/workouts/format";
+import {
+  formatClock,
+  formatDistance,
+  formatDuration,
+  formatVolume,
+  formatWeight,
+  parseDuration,
+  parseKgToGrams,
+  parseKmToMeters,
+  parseReps,
+  loadStat,
+} from "@/features/workouts/format";
 
 const bench = { id: "ex-bench", name: "Bench Press", muscleGroup: "CHEST" as const };
 const squat = { id: "ex-squat", name: "Back Squat", muscleGroup: "LEGS" as const };
+const run = { id: "ex-run", name: "Running", muscleGroup: "CARDIO" as const };
 
 const store = () => useWorkoutDraft.getState();
 const draft = () => {
@@ -115,7 +127,38 @@ describe("draftToInput (validation + API payload)", () => {
     startedAt: "2026-10-15T10:00:00.000Z",
     exercises,
   });
-  const set = (reps: string, weightKg: string, isWarmup = false, done = false) => ({ key: Math.random().toString(), reps, weightKg, isWarmup, done });
+  const set = (reps: string, weightKg: string, isWarmup = false, done = false) => ({ key: Math.random().toString(), reps, weightKg, distanceKm: "", duration: "", isWarmup, done });
+  const cardio = (distanceKm: string, duration: string, isWarmup = false) => ({ key: Math.random().toString(), reps: "", weightKg: "", distanceKm, duration, isWarmup, done: false });
+
+  it("sends cardio sets as distance + duration, and skips blank cardio rows", () => {
+    const result = draftToInput(baseDraft([{ key: "r", exercise: run, sets: [cardio("1", "8", true), cardio("5,2", "28:30"), cardio("", "")] }]));
+
+    expect(result.ok && result.input.exercises[0]!.sets).toEqual([
+      { distanceM: 1000, durationSec: 480, isWarmup: true },
+      { distanceM: 5200, durationSec: 1710, isWarmup: false },
+    ]);
+  });
+
+  it("accepts cardio with only a distance or only a time", () => {
+    const result = draftToInput(baseDraft([{ key: "r", exercise: run, sets: [cardio("3", ""), cardio("", "1:05:00")] }]));
+
+    expect(result.ok && result.input.exercises[0]!.sets).toEqual([
+      { distanceM: 3000, isWarmup: false },
+      { durationSec: 3900, isWarmup: false },
+    ]);
+  });
+
+  it("rejects bad cardio values with a message naming the set", () => {
+    expect(draftToInput(baseDraft([{ key: "r", exercise: run, sets: [cardio("five", "")] }]))).toEqual({
+      ok: false,
+      error: 'Running, set 1: "five" isn\'t a valid distance in km.',
+    });
+    expect(draftToInput(baseDraft([{ key: "r", exercise: run, sets: [cardio("", "28:75")] }]))).toMatchObject({ ok: false });
+    expect(draftToInput(baseDraft([{ key: "r", exercise: run, sets: [cardio("0", "0")] }]))).toEqual({
+      ok: false,
+      error: "Running, set 1: enter a distance or a time.",
+    });
+  });
 
   it("converts to the API shape: trimmed title, grams, numbers, endedAt", () => {
     const result = draftToInput(
@@ -194,7 +237,8 @@ describe("persisted draft migration", () => {
     const migrated = migrateDraft(v1, 1);
 
     expect(migrated.draft?.visibility).toBe("PRIVATE"); // v1 data preserved
-    expect(migrated.draft?.exercises[0]!.sets[0]).toEqual({ key: "s1", reps: "5", weightKg: "100", isWarmup: true, done: false });
+    // ...and the later steps run too (v3 cardio fields): every step chains to the current shape
+    expect(migrated.draft?.exercises[0]!.sets[0]).toEqual({ key: "s1", reps: "5", weightKg: "100", isWarmup: true, done: false, distanceKm: "", duration: "" });
   });
 
   it("chains every step for a v0 draft (visibility AND done)", () => {
@@ -216,6 +260,12 @@ describe("persisted draft migration", () => {
     expect(draft().exercises[0]!.sets.map((s) => s.done)).toEqual([true, false]);
   });
 
+  it("upgrades a v2 draft: sets gain empty cardio fields, typed values untouched", () => {
+    const v2 = { draft: { title: "Legs", visibility: "PUBLIC", startedAt: "2026-10-15T10:00:00.000Z", exercises: [{ key: "e1", exercise: squat, sets: [{ key: "s1", reps: "5", weightKg: "120", isWarmup: false, done: true }] }] } };
+
+    expect(migrateDraft(v2, 2).draft?.exercises[0]!.sets[0]).toEqual({ key: "s1", reps: "5", weightKg: "120", isWarmup: false, done: true, distanceKm: "", duration: "" });
+  });
+
   it("leaves an empty v0 state alone", () => {
     expect(migrateDraft({ draft: null }, 0)).toEqual({ draft: null });
   });
@@ -225,5 +275,34 @@ describe("persisted draft migration", () => {
     store().setVisibility("PRIVATE");
 
     expect(draft().visibility).toBe("PRIVATE");
+  });
+});
+
+describe("cardio units", () => {
+  it("parses km with either decimal separator", () => {
+    expect(parseKmToMeters("5.2")).toBe(5200);
+    expect(parseKmToMeters("10,05")).toBe(10050);
+    expect(parseKmToMeters("")).toBeNull();
+    expect(parseKmToMeters("5 km")).toBeNull();
+  });
+
+  it("parses minutes, min:sec and h:mm:ss", () => {
+    expect(parseDuration("30")).toBe(1800);
+    expect(parseDuration("28:30")).toBe(1710);
+    expect(parseDuration("1:05:00")).toBe(3900);
+    expect(parseDuration("28:75")).toBeNull(); // a typo, not 29:15
+    expect(parseDuration("1:5")).toBeNull();
+    expect(parseDuration("")).toBeNull();
+  });
+
+  it("formats distances", () => {
+    expect(formatDistance(800)).toBe("800 m");
+    expect(formatDistance(5200)).toBe("5.2 km");
+  });
+
+  it("shows distance instead of '0 kg' for a pure-cardio workout, volume otherwise", () => {
+    expect(loadStat({ totalVolumeGrams: 0, totalDistanceM: 5200 })).toMatchObject({ label: "Distance", value: "5.2 km" });
+    expect(loadStat({ totalVolumeGrams: 640_000, totalDistanceM: 2000 })).toMatchObject({ label: "Volume", value: "640 kg" });
+    expect(loadStat({ totalVolumeGrams: 0, totalDistanceM: 0 })).toMatchObject({ label: "Volume", value: "0 kg" });
   });
 });

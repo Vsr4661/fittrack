@@ -17,10 +17,8 @@ export default function PickExerciseScreen() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (exercises.data ?? [])
-      // The logger records weight × reps; cardio (time/distance) sets come later
-      .filter((e) => e.muscleGroup !== "CARDIO")
-      .filter((e) => q === "" || e.name.toLowerCase().includes(q));
+    // Every exercise is offered: cardio logs distance + time (see SetRow)
+    return (exercises.data ?? []).filter((e) => q === "" || e.name.toLowerCase().includes(q));
   }, [exercises.data, search]);
 
   if (exercises.isError) return <ErrorState error={exercises.error} onRetry={() => exercises.refetch()} />;
