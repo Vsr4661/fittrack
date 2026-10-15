@@ -40,6 +40,8 @@ function Gallery() {
     toast?: "success" | "error";
     sheet?: string;
     preview?: "login" | "register";
+    /** "1" = screenshot mode for previews: no dev header, no banner (README images) */
+    shot?: "1";
     seed?: "workout" | "cardio";
   }>();
   const exercises = useExercises();
@@ -108,6 +110,14 @@ function Gallery() {
   // routes only exist while signed OUT (Stack.Protected in app/_layout), so a
   // banner says so instead of letting the preview pass for the real screen.
   if (params.preview === "login" || params.preview === "register") {
+    if (params.shot === "1") {
+      return (
+        <>
+          <Stack.Screen options={{ headerShown: false }} />
+          {params.preview === "login" ? <LoginScreen /> : <RegisterScreen />}
+        </>
+      );
+    }
     return (
       <View style={styles.previewScreen}>
         <Stack.Screen options={{ title: params.preview === "login" ? "Login preview" : "Register preview" }} />
