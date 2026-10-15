@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  LEGS
+  SHOULDERS
+  ARMS
+  CORE
+  FULL_BODY
+  CARDIO
+}
+
+enum Equipment {
+  BARBELL
+  DUMBBELL
+  MACHINE
+  CABLE
+  BODYWEIGHT
+  KETTLEBELL
+  BAND
+  OTHER
+}
+
+enum Visibility {
+  PUBLIC
+  FOLLOWERS
+  PRIVATE
+}
+
+// ─── Users & social graph ──────────────────────────────
+
+model User {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  email        String   @unique // always stored lowercased by the app
+  username     String   @unique
+  passwordHash String
+  displayName  String
+  bio          String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workouts        Workout[]
+  customExercises Exercise[]
+  followers       Follow[]   @relation("following")
+  following       Follow[]   @relation("follower")
+
+  @@map("users")
+}
+
+model Follow {
+  followerId  String   @db.Uuid
+  followingId String   @db.Uuid
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // PK covers "who do I follow?"; the extra index covers "who follows me?"
+  @@id([followerId, followingId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// ─── Exercise catalog ──────────────────────────────────
+
+model Exercise {
+  id          String      @id @default(uuid(7)) @db.Uuid
+  name        String
+  muscleGroup MuscleGroup
+  equipment   Equipment
+  // null = built-in catalog exercise; set = a user's custom exercise
+  createdById String?     @db.Uuid
+  createdAt   DateTime    @default(now())
+
+  createdBy        User?             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  workoutExercises WorkoutExercise[]
+
+  @@index([createdById, name])
+  @@map("exercises")
+}
+
+// ─── Workouts ──────────────────────────────────────────
+
+model Workout {
+  id         String     @id @default(uuid(7)) @db.Uuid
+  userId     String     @db.Uuid
+  title      String
+  notes      String?
+  visibility Visibility @default(PUBLIC)
+  startedAt  DateTime
+  endedAt    DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises WorkoutExercise[]
+
+  // Serves "a user's workouts, newest first" (profile page + feed fan-in)
+  @@index([userId, startedAt(sort: Desc)])
+  @@map("workouts")
+}
+
+model WorkoutExercise {
+  id         String  @id @default(uuid(7)) @db.Uuid
+  workoutId  String  @db.Uuid
+  exerciseId String  @db.Uuid
+  position   Int // order within the workout
+  notes      String?
+
+  workout  Workout      @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  // Restrict: can't delete an exercise that appears in someone's history
+  exercise Exercise     @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  sets     WorkoutSet[]
+
+  @@unique([workoutId, position])
+  @@index([exerciseId])
+  @@map("workout_exercises")
+}
+
+model WorkoutSet {
+  id                String    @id @default(uuid(7)) @db.Uuid
+  workoutExerciseId String    @db.Uuid
+  setNumber         Int
+  reps              Int?
+  weightGrams       Int? // integer grams: exact, no float rounding (82.5kg = 82500)
+  durationSec       Int?
+  distanceM         Int?
+  isWarmup          Boolean   @default(false)
+  completedAt       DateTime?
+
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([workoutExerciseId, setNumber])
+  @@map("workout_sets")
+}

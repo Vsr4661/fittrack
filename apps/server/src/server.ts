@@ -1,6 +1,7 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
+import { prisma } from "./lib/prisma.js";
 
 const app = createApp();
 
@@ -10,7 +11,9 @@ const server = app.listen(env.PORT, () => {
 
 function shutdown(signal: string) {
   logger.info(`${signal} received, shutting down gracefully`);
-  server.close((err) => {
+  // Stop accepting requests first, then close the DB pool once in-flight ones finish
+  server.close(async (err) => {
+    await prisma.$disconnect();
     if (err) {
       logger.error({ err }, "Error during shutdown");
       process.exit(1);

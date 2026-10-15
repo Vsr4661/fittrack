@@ -4,3 +4,4 @@ dist/
 *.log
 .expo/
 coverage/
+apps/server/src/generated/
