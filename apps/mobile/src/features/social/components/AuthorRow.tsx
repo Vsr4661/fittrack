@@ -1,11 +1,12 @@
 import { Link } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Avatar } from "@/components/Avatar";
+import { Pressable, Text, View } from "react-native";
+import { Avatar } from "@/components/ui";
 import type { Author } from "@/features/workouts/types";
-import { colors, spacing } from "@/theme/legacy";
+import { makeStyles } from "@/theme";
 
 /** Avatar + name + @username; tapping opens their profile. */
 export function AuthorRow({ author, subtitle }: { author: Author; subtitle?: string }) {
+  const styles = useStyles();
   return (
     <Link href={`/user/${author.username}`} asChild>
       <Pressable style={styles.row} accessibilityRole="link" accessibilityLabel={`Open ${author.displayName}'s profile`}>
@@ -24,9 +25,9 @@ export function AuthorRow({ author, subtitle }: { author: Author; subtitle?: str
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+const useStyles = makeStyles((t) => ({
+  row: { flexDirection: "row", alignItems: "center", gap: t.spacing.md, minHeight: 44 },
   text: { flex: 1 },
-  name: { fontSize: 15, fontWeight: "700", color: colors.text },
-  sub: { fontSize: 13, color: colors.textMuted },
-});
+  name: { ...t.typography.bodyStrong, color: t.colors.text },
+  sub: { ...t.typography.caption, color: t.colors.textMuted },
+}));

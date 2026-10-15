@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Pressable, Text, View } from "react-native";
+import { Card } from "@/components/ui";
 import { AuthorRow } from "@/features/social/components/AuthorRow";
 import { LikeButton } from "@/features/social/components/LikeButton";
-import { colors, radius, spacing } from "@/theme/legacy";
+import { makeStyles, useTheme } from "@/theme";
 import { formatDuration, formatVolume, formatWorkoutDate } from "../format";
 import type { WorkoutSummary } from "../types";
 
@@ -14,78 +15,91 @@ interface WorkoutCardProps {
 }
 
 export function WorkoutCard({ workout, showAuthor = false }: WorkoutCardProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { stats, social } = workout;
+  const open = () => router.push(`/workout/${workout.id}`);
+
   return (
-    <View style={styles.card}>
+    <Card onPress={open} accessibilityLabel={`${workout.title}, ${formatWorkoutDate(workout.startedAt)}`}>
       {showAuthor ? <AuthorRow author={workout.author} subtitle={formatWorkoutDate(workout.startedAt)} /> : null}
 
-      <Link href={`/workout/${workout.id}`} asChild>
-        <Pressable style={({ pressed }) => [styles.body, pressed && styles.pressed]} accessibilityRole="button">
-          <View style={styles.header}>
-            <Text style={styles.title} numberOfLines={1}>
-              {workout.title}
-            </Text>
-            {!showAuthor ? <Text style={styles.date}>{formatWorkoutDate(workout.startedAt)}</Text> : null}
-            {workout.visibility !== "PUBLIC" ? (
-              <Ionicons
-                name={workout.visibility === "PRIVATE" ? "lock-closed" : "people"}
-                size={14}
-                color={colors.textMuted}
-                accessibilityLabel={workout.visibility === "PRIVATE" ? "Private" : "Followers only"}
-              />
-            ) : null}
-          </View>
-          <Text style={styles.exercises} numberOfLines={2}>
-            {workout.exerciseNames.join(" · ")}
-          </Text>
-          <View style={styles.stats}>
-            {stats.durationSec !== null ? <Stat label="Duration" value={formatDuration(stats.durationSec)} /> : null}
-            <Stat label="Sets" value={String(stats.setCount)} />
-            <Stat label="Volume" value={formatVolume(stats.totalVolumeGrams)} />
-          </View>
-        </Pressable>
-      </Link>
+      <View style={styles.header}>
+        <Text style={styles.title} numberOfLines={1}>
+          {workout.title}
+        </Text>
+        {workout.visibility !== "PUBLIC" ? (
+          <Ionicons
+            name={workout.visibility === "PRIVATE" ? "lock-closed" : "people"}
+            size={14}
+            color={colors.textMuted}
+            accessibilityLabel={workout.visibility === "PRIVATE" ? "Private" : "Followers only"}
+          />
+        ) : null}
+        {!showAuthor ? <Text style={styles.date}>{formatWorkoutDate(workout.startedAt)}</Text> : null}
+      </View>
+
+      <Text style={styles.exercises} numberOfLines={2}>
+        {workout.exerciseNames.join(" · ")}
+      </Text>
+
+      {/* Stat tiles: the numbers people scan for, big and tabular */}
+      <View style={styles.stats}>
+        {stats.durationSec !== null ? <Stat icon="time-outline" value={formatDuration(stats.durationSec)} label="Time" /> : null}
+        <Stat icon="layers-outline" value={String(stats.setCount)} label="Sets" />
+        <Stat icon="barbell-outline" value={formatVolume(stats.totalVolumeGrams)} label="Volume" />
+      </View>
 
       <View style={styles.footer}>
         <LikeButton workoutId={workout.id} social={social} />
-        <Link href={`/workout/${workout.id}`} asChild>
-          <Pressable style={styles.comments} hitSlop={8} accessibilityLabel={`${social.commentCount} comments`}>
-            <Ionicons name="chatbubble-outline" size={20} color={colors.textMuted} />
-            <Text style={styles.count}>{social.commentCount}</Text>
-          </Pressable>
-        </Link>
+        <Pressable onPress={open} hitSlop={10} style={styles.comments} accessibilityRole="button" accessibilityLabel={`${social.commentCount} comments`}>
+          <Ionicons name="chatbubble-outline" size={20} color={colors.textMuted} />
+          <Text style={styles.count}>{social.commentCount}</Text>
+        </Pressable>
+      </View>
+    </Card>
+  );
+}
+
+function Stat({ icon, value, label }: { icon: keyof typeof Ionicons.glyphMap; value: string; label: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={styles.stat} accessible accessibilityLabel={`${label}: ${value}`}>
+      <Ionicons name={icon} size={14} color={colors.textMuted} />
+      <View>
+        <Text style={styles.statValue}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
       </View>
     </View>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <View>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, gap: spacing.sm },
-  body: { gap: spacing.sm },
-  pressed: { opacity: 0.7 },
-  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  title: { flex: 1, fontSize: 17, fontWeight: "700", color: colors.text },
-  date: { fontSize: 13, color: colors.textMuted },
-  exercises: { fontSize: 14, color: colors.textMuted },
-  stats: { flexDirection: "row", gap: spacing.lg },
-  statLabel: { fontSize: 12, color: colors.textMuted },
-  statValue: { fontSize: 15, fontWeight: "600", color: colors.text },
+const useStyles = makeStyles((t) => ({
+  header: { flexDirection: "row", alignItems: "center", gap: t.spacing.sm },
+  title: { ...t.typography.heading, color: t.colors.text, flex: 1 },
+  date: { ...t.typography.caption, color: t.colors.textMuted },
+  exercises: { ...t.typography.body, fontSize: 14, color: t.colors.textMuted, marginTop: -t.spacing.xs },
+  stats: { flexDirection: "row", gap: t.spacing.sm },
+  stat: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: t.spacing.xs + 2,
+    padding: t.spacing.sm + 2,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.surfaceMuted,
+  },
+  statValue: { ...t.typography.number, fontSize: 15, color: t.colors.text },
+  statLabel: { ...t.typography.caption, fontSize: 11, color: t.colors.textMuted },
   footer: {
     flexDirection: "row",
-    gap: spacing.lg,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
+    alignItems: "center",
+    gap: t.spacing.lg,
+    paddingTop: t.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: t.colors.border,
   },
-  comments: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-  count: { fontSize: 15, color: colors.textMuted, fontVariant: ["tabular-nums"] },
-});
+  comments: { flexDirection: "row", alignItems: "center", gap: t.spacing.xs + 2, minHeight: 36 },
+  count: { ...t.typography.label, color: t.colors.textMuted, fontVariant: ["tabular-nums"] },
+}));

@@ -1,20 +1,30 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Tabs } from "expo-router";
 import { Pressable } from "react-native";
-import { colors } from "@/theme/legacy";
+import { useTheme } from "@/theme";
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
+
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary }}>
+    <Tabs screenOptions={{ tabBarActiveTintColor: colors.primaryText }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: "Feed",
+          title: "Home",
+          headerShown: false, // the dashboard draws its own greeting header
           tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="feed"
+        options={{
+          title: "Feed",
+          tabBarIcon: ({ color, size }) => <Ionicons name="people" color={color} size={size} />,
           headerRight: () => (
             <Link href="/search" asChild>
-              <Pressable hitSlop={8} style={{ marginRight: 16 }} accessibilityLabel="Find people">
-                <Ionicons name="search" size={22} color={colors.primary} />
+              <Pressable hitSlop={12} style={{ marginRight: 16 }} accessibilityLabel="Find people">
+                <Ionicons name="search" size={22} color={colors.primaryText} />
               </Pressable>
             </Link>
           ),
@@ -31,14 +41,14 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" color={color} size={size} />,
           headerRight: () => (
             <Link href="/settings" asChild>
               <Pressable hitSlop={12} style={{ marginRight: 16 }} accessibilityLabel="Settings">
-                <Ionicons name="settings-outline" size={22} color={colors.primary} />
+                <Ionicons name="settings-outline" size={22} color={colors.primaryText} />
               </Pressable>
             </Link>
           ),
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" color={color} size={size} />,
         }}
       />
     </Tabs>

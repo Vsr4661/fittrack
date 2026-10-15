@@ -47,7 +47,7 @@
     "ios": "expo start --ios --port 8082",
     "web": "expo start --web --port 8082",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "TZ=America/Los_Angeles jest"
   },
   "private": true,
   "jest": {
