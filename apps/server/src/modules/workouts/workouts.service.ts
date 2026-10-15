@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
 import { authorSelect } from "../users/users.select.js";
 import { visibleTo } from "./visibility.js";
-import { volumeGrams, workingSets } from "./volume.js";
+import { distanceMeters, volumeGrams, workingSets } from "./volume.js";
 import type { ListWorkoutsQuery, WorkoutInput } from "./workouts.schemas.js";
 
 // ─── Response shapes ───────────────────────────────────
@@ -201,6 +201,7 @@ function computeStats(workout: WorkoutRow) {
     exerciseCount: workout.exercises.length,
     setCount: workingSets(sets).length,
     totalVolumeGrams: volumeGrams(sets), // shared definition: see volume.ts
+    totalDistanceM: distanceMeters(sets),
     durationSec: workout.endedAt
       ? Math.round((workout.endedAt.getTime() - workout.startedAt.getTime()) / 1000)
       : null,

@@ -81,6 +81,7 @@ describe("POST /workouts", () => {
       exerciseCount: 2,
       setCount: 3, // the warmup set doesn't count
       totalVolumeGrams: 8 * 80_000 + 6 * 82_500, // warmup excluded, cardio has no weight
+      totalDistanceM: 2000, // the run
       durationSec: 55 * 60,
     });
   });

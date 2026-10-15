@@ -12,8 +12,13 @@ export interface VolumeSet {
 /** The set fields volume needs, for Prisma `select`s. */
 export const volumeSetSelect = { reps: true, weightGrams: true, isWarmup: true } as const;
 
-export function workingSets<T extends VolumeSet>(sets: T[]): T[] {
+export function workingSets<T extends { isWarmup: boolean }>(sets: T[]): T[] {
   return sets.filter((s) => !s.isWarmup);
+}
+
+/** Σ distance over working sets: cardio's counterpart to volume (a run has no kg). */
+export function distanceMeters(sets: { distanceM: number | null; isWarmup: boolean }[]): number {
+  return workingSets(sets).reduce((sum, s) => sum + (s.distanceM ?? 0), 0);
 }
 
 export function volumeGrams(sets: VolumeSet[]): number {
