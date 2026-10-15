@@ -13,7 +13,7 @@ concurrency:
 jobs:
   server:
     name: Server (typecheck, build, test)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # pinned: ubuntu-latest moves to 26 on 2026-10-19; upgrade deliberately
     timeout-minutes: 15
 
     # Real Postgres + Redis, same versions as docker-compose.yml. Tests hit a
@@ -54,7 +54,7 @@ jobs:
 
   mobile:
     name: Mobile (typecheck, test)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # pinned: ubuntu-latest moves to 26 on 2026-10-19; upgrade deliberately
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
