@@ -12,6 +12,8 @@ export interface DraftSet {
   reps: string;
   weightKg: string;
   isWarmup: boolean;
+  /** Ticked off in the gym. Client-only UI state: never sent to the API. */
+  done: boolean;
 }
 
 export interface DraftExercise {
@@ -42,7 +44,7 @@ interface DraftState {
 
 let keySeq = 0;
 const newKey = () => `${Date.now().toString(36)}-${(keySeq++).toString(36)}`;
-const emptySet = (): DraftSet => ({ key: newKey(), reps: "", weightKg: "", isWarmup: false });
+const emptySet = (): DraftSet => ({ key: newKey(), reps: "", weightKg: "", isWarmup: false, done: false });
 
 /** Immutable update of one exercise inside the draft. */
 function mapExercise(draft: WorkoutDraft, exerciseKey: string, fn: (e: DraftExercise) => DraftExercise): WorkoutDraft {
@@ -83,7 +85,7 @@ export const useWorkoutDraft = create<DraftState>()(
           update((d) =>
             mapExercise(d, exerciseKey, (e) => {
               const last = e.sets.at(-1);
-              const next = last ? { ...last, key: newKey(), isWarmup: false } : emptySet();
+              const next = last ? { ...last, key: newKey(), isWarmup: false, done: false } : emptySet();
               return { ...e, sets: [...e.sets, next] };
             }),
           ),
@@ -108,19 +110,34 @@ export const useWorkoutDraft = create<DraftState>()(
       partialize: (state) => ({ draft: state.draft }), // persist data, not functions
       // Bump `version` whenever the saved shape changes, and upgrade old data in
       // `migrate`. A draft saved by an older app version must still load.
-      version: 1,
+      version: 2,
       migrate: migrateDraft,
     },
   ),
 );
 
-/** v0 (Phase 4) drafts had no visibility; they default to PUBLIC, as the server does. */
-export function migrateDraft(persisted: unknown, version: number) {
-  const state = (persisted ?? {}) as { draft: (Omit<WorkoutDraft, "visibility"> & { visibility?: Visibility }) | null };
-  if (version < 1 && state.draft) {
-    return { draft: { ...state.draft, visibility: state.draft.visibility ?? "PUBLIC" } };
+/**
+ * Upgrades a draft saved by an older app version, one step at a time, so a
+ * draft from ANY old version reaches the current shape:
+ *   v0 -> v1: no `visibility` (Phase 4)    -> default PUBLIC, as the server does
+ *   v1 -> v2: sets had no `done` flag       -> false
+ */
+export function migrateDraft(persisted: unknown, version: number): { draft: WorkoutDraft | null } {
+  // Old shapes are untyped by definition, so treat them loosely and build the new one
+  type Loose = { draft: (Record<string, unknown> & { exercises?: { sets?: Record<string, unknown>[] }[] }) | null };
+  const state = (persisted ?? { draft: null }) as Loose;
+  let draft = state.draft;
+
+  if (draft && version < 1) {
+    draft = { ...draft, visibility: draft.visibility ?? "PUBLIC" };
   }
-  return state as { draft: WorkoutDraft | null };
+  if (draft && version < 2) {
+    draft = {
+      ...draft,
+      exercises: (draft.exercises ?? []).map((e) => ({ ...e, sets: (e.sets ?? []).map((set) => ({ ...set, done: false })) })),
+    };
+  }
+  return { draft: draft as unknown as WorkoutDraft | null };
 }
 
 export type DraftResult = { ok: true; input: WorkoutInput } | { ok: false; error: string };

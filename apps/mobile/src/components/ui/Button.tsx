@@ -4,7 +4,7 @@ import { haptics } from "@/lib/haptics";
 import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
 import { PressableScale } from "./PressableScale";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "dangerGhost";
 
 interface ButtonProps {
   title: string;
@@ -38,7 +38,7 @@ export function Button({
   // background turns muddy brown, and grey reads as "unavailable" in any theme
   const contentColor = disabled
     ? colors.textMuted
-    : { primary: colors.onPrimary, secondary: colors.text, ghost: colors.primaryText, danger: colors.danger }[variant];
+    : { primary: colors.onPrimary, secondary: colors.text, ghost: colors.primaryText, danger: colors.danger, dangerGhost: colors.danger }[variant];
 
   return (
     <PressableScale
@@ -85,6 +85,7 @@ const useStyles = makeStyles((t) => ({
   secondary: { backgroundColor: t.colors.surfaceMuted },
   ghost: { backgroundColor: "transparent" },
   danger: { backgroundColor: t.colors.dangerSoft },
+  dangerGhost: { backgroundColor: "transparent" }, // low-emphasis destructive (e.g. "Discard")
   disabled: { backgroundColor: t.colors.surfaceMuted },
   content: { flexDirection: "row", alignItems: "center", gap: t.spacing.sm },
   hidden: { opacity: 0 },

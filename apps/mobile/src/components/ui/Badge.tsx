@@ -9,7 +9,7 @@ export function Badge({ label, tone = "neutral", icon }: { label: string; tone?:
   const styles = useStyles();
   const { colors } = useTheme();
   const fg = { neutral: colors.textMuted, brand: colors.onPrimarySoft, success: colors.success, warning: colors.warning, danger: colors.danger }[tone];
-  const bg = { neutral: colors.surfaceMuted, brand: colors.primarySoft, success: `${colors.success}22`, warning: `${colors.warning}22`, danger: colors.dangerSoft }[tone];
+  const bg = { neutral: colors.surfaceMuted, brand: colors.primarySoft, success: colors.successSoft, warning: colors.warningSoft, danger: colors.dangerSoft }[tone];
 
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>

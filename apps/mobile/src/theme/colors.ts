@@ -45,7 +45,10 @@ export interface ColorTokens {
   primarySoft: string; // tinted backgrounds (selected chip, badges)
   onPrimarySoft: string; // text/icons on primarySoft
   success: string;
+  successSoft: string; // tinted background: completed sets
+  onSuccess: string; // icons/text on a solid success fill
   warning: string;
+  warningSoft: string; // tinted background: warmup sets
   danger: string;
   dangerSoft: string;
   overlay: string; // modal/bottom-sheet backdrop
@@ -69,7 +72,10 @@ export const lightColors: ColorTokens = {
   primarySoft: "#FFEDE5",
   onPrimarySoft: "#B83508",
   success: "#166534",
+  successSoft: "#ECFDF3",
+  onSuccess: palette.white,
   warning: "#92400E",
+  warningSoft: "#FEF3C7",
   danger: "#B91C1C",
   dangerSoft: "#FEE2E2",
   overlay: "rgba(15, 23, 42, 0.45)",
@@ -93,7 +99,10 @@ export const darkColors: ColorTokens = {
   primarySoft: "rgba(255, 90, 31, 0.16)",
   onPrimarySoft: palette.orange400,
   success: palette.green400,
+  successSoft: "rgba(74, 222, 128, 0.10)",
+  onSuccess: palette.slate900, // dark-mode green is light: white on it is only 1.74:1, this is 10.18:1
   warning: palette.amber500,
+  warningSoft: "rgba(245, 158, 11, 0.18)",
   danger: palette.red400,
   dangerSoft: "rgba(248, 113, 113, 0.16)",
   overlay: "rgba(0, 0, 0, 0.6)",

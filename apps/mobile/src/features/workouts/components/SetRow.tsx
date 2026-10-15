@@ -1,80 +1,176 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { colors, radius, spacing } from "@/theme/legacy";
+import { Pressable, Text, TextInput, View } from "react-native";
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import { toast } from "@/components/ui";
+import { haptics } from "@/lib/haptics";
+import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
 import type { DraftSet } from "../draftStore";
 
 interface SetRowProps {
-  index: number;
+  /** Working-set number (1, 2, 3...). Warmups don't count, like in most lifting apps. */
+  number: number;
   set: DraftSet;
   onChange: (patch: Partial<Omit<DraftSet, "key">>) => void;
   onRemove: () => void;
+  /** Called when the set is ticked off (starts the rest timer). */
+  onComplete: () => void;
 }
 
-export function SetRow({ index, set, onChange, onRemove }: SetRowProps) {
+/** Column widths shared with the header row in ExerciseCard, so they line up. */
+export const SET_COL = 44;
+export const DONE_COL = MIN_TOUCH;
+
+/**
+ * One set: [set # / warmup] [kg] [reps] [✓]. Swipe left to delete.
+ * Sized for the gym: big inputs and 44pt+ targets you can hit with sweaty
+ * hands between sets.
+ */
+export function SetRow({ number, set, onChange, onRemove, onComplete }: SetRowProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
+  const label = set.isWarmup ? "Warmup set" : `Set ${number}`;
+
+  const toggleDone = () => {
+    if (!set.done && set.reps.trim() === "") {
+      haptics.warning();
+      toast.info("Enter reps first, then tick the set off");
+      return;
+    }
+    const done = !set.done;
+    onChange({ done });
+    if (done) {
+      haptics.success();
+      onComplete();
+    } else {
+      haptics.selection();
+    }
+  };
+
   return (
-    <View style={styles.row}>
-      {/* Tap the set number to toggle warmup ("W"): a common gym-app convention */}
-      <Pressable
-        onPress={() => onChange({ isWarmup: !set.isWarmup })}
-        style={[styles.badge, set.isWarmup && styles.badgeWarmup]}
-        accessibilityLabel={set.isWarmup ? `Set ${index + 1}, warmup. Tap to make it a working set` : `Set ${index + 1}. Tap to mark as warmup`}
+    <ReanimatedSwipeable
+      friction={2}
+      rightThreshold={40}
+      overshootRight={false}
+      renderRightActions={(_progress, _translation, methods) => (
+        <Pressable
+          onPress={() => {
+            methods.close();
+            haptics.warning();
+            onRemove();
+          }}
+          style={styles.deleteAction}
+          accessibilityRole="button"
+          accessibilityLabel={`Delete ${label}`}
+        >
+          <Ionicons name="trash" size={20} color={colors.onPrimary} />
+          <Text style={styles.deleteText}>Delete</Text>
+        </Pressable>
+      )}
+    >
+      <View
+        style={[styles.row, set.done && styles.rowDone]}
+        // Swipe gestures aren't reachable with a screen reader: offer the same action here
+        accessibilityActions={[{ name: "delete", label: "Delete set" }]}
+        onAccessibilityAction={(e) => e.nativeEvent.actionName === "delete" && onRemove()}
       >
-        <Text style={[styles.badgeText, set.isWarmup && styles.badgeTextWarmup]}>
-          {set.isWarmup ? "W" : index + 1}
-        </Text>
-      </Pressable>
+        {/* Tap the set number to toggle warmup ("W"): a common gym-app convention */}
+        <Pressable
+          onPress={() => {
+            haptics.selection();
+            onChange({ isWarmup: !set.isWarmup });
+          }}
+          style={[styles.badge, set.isWarmup && styles.badgeWarmup]}
+          accessibilityRole="button"
+          accessibilityLabel={`${label}. Double tap to ${set.isWarmup ? "make it a working set" : "mark as warmup"}`}
+        >
+          <Text style={[styles.badgeText, set.isWarmup && styles.badgeTextWarmup]}>{set.isWarmup ? "W" : number}</Text>
+        </Pressable>
 
-      <TextInput
-        style={styles.input}
-        value={set.weightKg}
-        onChangeText={(weightKg) => onChange({ weightKg })}
-        placeholder="kg"
-        placeholderTextColor={colors.textMuted}
-        keyboardType="decimal-pad"
-        accessibilityLabel={`Set ${index + 1} weight in kilograms`}
-      />
-      <Text style={styles.times}>×</Text>
-      <TextInput
-        style={styles.input}
-        value={set.reps}
-        onChangeText={(reps) => onChange({ reps })}
-        placeholder="reps"
-        placeholderTextColor={colors.textMuted}
-        keyboardType="number-pad"
-        accessibilityLabel={`Set ${index + 1} reps`}
-      />
+        <TextInput
+          style={[styles.input, set.done && styles.inputDone]}
+          value={set.weightKg}
+          onChangeText={(weightKg) => onChange({ weightKg })}
+          placeholder="—"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="decimal-pad"
+          selectTextOnFocus // tap once to overwrite the copied value
+          accessibilityLabel={`${label} weight in kilograms`}
+        />
+        <TextInput
+          style={[styles.input, set.done && styles.inputDone]}
+          value={set.reps}
+          onChangeText={(reps) => onChange({ reps })}
+          placeholder="—"
+          placeholderTextColor={colors.textMuted}
+          keyboardType="number-pad"
+          selectTextOnFocus
+          accessibilityLabel={`${label} reps`}
+        />
 
-      <Pressable onPress={onRemove} hitSlop={8} accessibilityLabel={`Remove set ${index + 1}`}>
-        <Ionicons name="close-circle" size={22} color={colors.textMuted} />
-      </Pressable>
-    </View>
+        <Pressable
+          onPress={toggleDone}
+          style={[styles.check, set.done && styles.checkDone]}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: set.done }}
+          accessibilityLabel={`${label} done`}
+        >
+          <Ionicons name="checkmark" size={24} color={set.done ? colors.onSuccess : colors.textMuted} />
+        </Pressable>
+      </View>
+    </ReanimatedSwipeable>
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+const useStyles = makeStyles((t) => ({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: t.spacing.sm,
+    paddingVertical: t.spacing.xs + 2,
+    paddingHorizontal: t.spacing.xs,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.surface, // opaque, so the swipe action hides behind it
+  },
+  rowDone: { backgroundColor: t.colors.successSoft },
   badge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.background,
+    width: SET_COL,
+    height: SET_COL,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
   },
-  badgeWarmup: { backgroundColor: "#FEF3C7" },
-  badgeText: { fontWeight: "700", color: colors.text },
-  badgeTextWarmup: { color: "#B45309" },
+  badgeWarmup: { backgroundColor: t.colors.warningSoft },
+  badgeText: { ...t.typography.bodyStrong, color: t.colors.text },
+  badgeTextWarmup: { color: t.colors.warning },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: 8,
-    paddingHorizontal: spacing.sm,
-    fontSize: 16,
+    height: 48,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.surfaceMuted,
     textAlign: "center",
-    color: colors.text,
-    backgroundColor: colors.background,
+    ...t.typography.number,
+    fontSize: 20,
+    color: t.colors.text,
   },
-  times: { color: colors.textMuted, fontSize: 16 },
-});
+  inputDone: { backgroundColor: "transparent" },
+  check: {
+    width: DONE_COL,
+    height: DONE_COL,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.surfaceMuted,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkDone: { backgroundColor: t.colors.success },
+  deleteAction: {
+    width: 88,
+    marginLeft: t.spacing.sm,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.danger,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: t.spacing.xxs,
+  },
+  deleteText: { ...t.typography.caption, color: t.colors.onPrimary },
+}));

@@ -115,7 +115,7 @@ describe("draftToInput (validation + API payload)", () => {
     startedAt: "2026-10-15T10:00:00.000Z",
     exercises,
   });
-  const set = (reps: string, weightKg: string, isWarmup = false) => ({ key: Math.random().toString(), reps, weightKg, isWarmup });
+  const set = (reps: string, weightKg: string, isWarmup = false, done = false) => ({ key: Math.random().toString(), reps, weightKg, isWarmup, done });
 
   it("converts to the API shape: trimmed title, grams, numbers, endedAt", () => {
     const result = draftToInput(
@@ -147,6 +147,15 @@ describe("draftToInput (validation + API payload)", () => {
     });
   });
 
+  it("never sends the client-only `done` flag to the API", () => {
+    const result = draftToInput(baseDraft([{ key: "1", exercise: bench, sets: [set("5", "100", false, true), set("5", "100")] }]));
+
+    expect(result.ok && result.input.exercises[0]!.sets).toEqual([
+      { reps: 5, weightGrams: 100_000, isWarmup: false },
+      { reps: 5, weightGrams: 100_000, isWarmup: false },
+    ]);
+  });
+
   it("skips completely blank rows (the extra set people often add)", () => {
     const result = draftToInput(baseDraft([{ key: "1", exercise: bench, sets: [set("5", "100"), set("", "")] }]));
 
@@ -170,6 +179,41 @@ describe("persisted draft migration", () => {
     const v0 = { draft: { title: "Old", startedAt: "2026-10-15T10:00:00.000Z", exercises: [] } };
 
     expect(migrateDraft(v0, 0)).toEqual({ draft: { ...v0.draft, visibility: "PUBLIC" } });
+  });
+
+  it("upgrades a v1 draft: sets gain done = false, nothing else changes", () => {
+    const v1 = {
+      draft: {
+        title: "Push",
+        visibility: "PRIVATE",
+        startedAt: "2026-10-15T10:00:00.000Z",
+        exercises: [{ key: "e1", exercise: bench, sets: [{ key: "s1", reps: "5", weightKg: "100", isWarmup: true }] }],
+      },
+    };
+
+    const migrated = migrateDraft(v1, 1);
+
+    expect(migrated.draft?.visibility).toBe("PRIVATE"); // v1 data preserved
+    expect(migrated.draft?.exercises[0]!.sets[0]).toEqual({ key: "s1", reps: "5", weightKg: "100", isWarmup: true, done: false });
+  });
+
+  it("chains every step for a v0 draft (visibility AND done)", () => {
+    const v0 = { draft: { title: "Old", startedAt: "2026-10-15T10:00:00.000Z", exercises: [{ key: "e1", exercise: bench, sets: [{ key: "s1", reps: "8", weightKg: "", isWarmup: false }] }] } };
+
+    const migrated = migrateDraft(v0, 0);
+
+    expect(migrated.draft).toMatchObject({ visibility: "PUBLIC", exercises: [{ sets: [{ done: false }] }] });
+  });
+
+  it("new sets start not-done, and a copied set resets done", () => {
+    store().start();
+    store().addExercise(bench);
+    const ex = draft().exercises[0]!;
+    store().updateSet(ex.key, ex.sets[0]!.key, { reps: "5", done: true });
+
+    store().addSet(ex.key);
+
+    expect(draft().exercises[0]!.sets.map((s) => s.done)).toEqual([true, false]);
   });
 
   it("leaves an empty v0 state alone", () => {

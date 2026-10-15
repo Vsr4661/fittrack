@@ -1,4 +1,4 @@
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import {
@@ -14,6 +14,9 @@ import {
   toast,
   WorkoutCardSkeleton,
 } from "@/components/ui";
+import { useWorkoutDraft } from "@/features/workouts/draftStore";
+import { useExercises } from "@/features/workouts/hooks";
+import { useRestTimer } from "@/features/workouts/restTimer";
 import { makeStyles } from "@/theme";
 import LoginScreen from "../(auth)/login";
 import RegisterScreen from "../(auth)/register";
@@ -37,7 +40,9 @@ function Gallery() {
     toast?: "success" | "error";
     sheet?: string;
     preview?: "login" | "register";
+    seed?: "workout";
   }>();
+  const exercises = useExercises();
   const [chip, setChip] = useState("All");
   const [sheetOpen, setSheetOpen] = useState(false);
   const preference = useThemePreference((s) => s.preference);
@@ -52,6 +57,33 @@ function Gallery() {
     if (params.toast === "error") toast.error("Couldn't reach the server");
     if (params.sheet) setSheetOpen(true);
   }, [params.toast, params.sheet]);
+
+  // ?seed=workout: replace the draft with a realistic in-progress workout (real
+  // catalog ids, so it can still be saved) and open the logger. Dev only.
+  useEffect(() => {
+    if (params.seed !== "workout" || !exercises.data) return;
+    const find = (name: string) => exercises.data.find((e) => e.name === name);
+    const bench = find("Bench Press");
+    const squat = find("Back Squat");
+    if (!bench || !squat) return;
+    const d = useWorkoutDraft.getState();
+    d.discard();
+    d.start();
+    d.setTitle("Push day");
+    d.addExercise(bench);
+    d.addExercise(squat);
+    const [b, s] = useWorkoutDraft.getState().draft!.exercises;
+    d.updateSet(b!.key, b!.sets[0]!.key, { weightKg: "40", reps: "10", isWarmup: true, done: true });
+    d.addSet(b!.key);
+    const b2 = useWorkoutDraft.getState().draft!.exercises[0]!.sets[1]!;
+    d.updateSet(b!.key, b2.key, { weightKg: "80", reps: "8", isWarmup: false, done: true });
+    d.addSet(b!.key);
+    const b3 = useWorkoutDraft.getState().draft!.exercises[0]!.sets[2]!;
+    d.updateSet(b!.key, b3.key, { weightKg: "82.5", reps: "", done: false });
+    d.updateSet(s!.key, s!.sets[0]!.key, { weightKg: "100", reps: "5" });
+    useRestTimer.getState().start(75);
+    router.replace("/workout/new");
+  }, [params.seed, exercises.data]);
 
   // Render auth screens while signed in, for before/after screenshots
   // without logging the developer out. Buttons work but nothing is submitted

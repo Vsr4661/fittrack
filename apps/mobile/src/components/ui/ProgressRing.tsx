@@ -14,6 +14,9 @@ interface ProgressRingProps {
   /** Rendered in the middle of the ring (e.g. "2/4"). */
   children?: ReactNode;
   accessibilityLabel: string;
+  /** Animation length per change. Short (e.g. 250) for a live countdown. */
+  durationMs?: number;
+  color?: string;
 }
 
 /**
@@ -23,7 +26,7 @@ interface ProgressRingProps {
  * strokeDashoffset hides part of it. Animating the offset on the UI thread
  * (Reanimated) "draws" the ring without re-rendering React every frame.
  */
-export function ProgressRing({ progress, size = 96, strokeWidth = 10, children, accessibilityLabel }: ProgressRingProps) {
+export function ProgressRing({ progress, size = 96, strokeWidth = 10, children, accessibilityLabel, durationMs = 900, color }: ProgressRingProps) {
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
   const radius = (size - strokeWidth) / 2;
@@ -32,8 +35,8 @@ export function ProgressRing({ progress, size = 96, strokeWidth = 10, children, 
 
   const animated = useSharedValue(reduceMotion ? clamped : 0);
   useEffect(() => {
-    animated.value = reduceMotion ? clamped : withTiming(clamped, { duration: 900, easing: Easing.out(Easing.cubic) });
-  }, [animated, clamped, reduceMotion]);
+    animated.value = reduceMotion ? clamped : withTiming(clamped, { duration: durationMs, easing: Easing.out(Easing.cubic) });
+  }, [animated, clamped, reduceMotion, durationMs]);
 
   const animatedProps = useAnimatedProps(() => ({ strokeDashoffset: circumference * (1 - animated.value) }));
 
@@ -52,7 +55,7 @@ export function ProgressRing({ progress, size = 96, strokeWidth = 10, children, 
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={colors.brand} // graphics, not text: the bright brand orange is fine here (3:1 rule)
+          stroke={color ?? colors.brand} // graphics, not text: the bright brand orange is fine here (3:1 rule)
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
