@@ -45,7 +45,8 @@ export default function NewWorkoutScreen() {
         useRestTimer.getState().stop();
         toast.success("Workout saved 💪");
         // Replace (not push) so "back" from the summary goes to history, not the logger
-        router.replace(`/workout/${workout.id}`);
+        // celebrate=1: the detail screen checks this workout for new PRs (once, right after saving)
+        router.replace({ pathname: "/workout/[id]", params: { id: workout.id, celebrate: "1" } });
       },
       onError: (err) => toast.error(toApiError(err).message),
     });

@@ -5,6 +5,7 @@ export { Badge } from "./Badge";
 export { Button, type ButtonVariant } from "./Button";
 export { Card } from "./Card";
 export { Chip } from "./Chip";
+export { Confetti } from "./Confetti";
 export { EmptyState } from "./EmptyState";
 export { ErrorState } from "./ErrorState";
 export { Input } from "./Input";

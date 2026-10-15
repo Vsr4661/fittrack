@@ -37,7 +37,12 @@ export function Avatar({ name, userId, size = 40, ring }: AvatarProps) {
       accessibilityElementsHidden // decorative: the name is always shown next to it
       importantForAccessibility="no-hide-descendants"
     >
-      <Text style={{ color: "#FFFFFF", fontFamily: fonts.bold, fontSize: size * 0.38 }}>{initials || "?"}</Text>
+      {/* Sized to the circle, not to the reader's text setting: scaled initials
+          overflowed the circle at large accessibility sizes. Screen readers
+          read the name from the parent's label, so nothing is lost. */}
+      <Text style={{ color: "#FFFFFF", fontFamily: fonts.bold, fontSize: size * 0.38 }} allowFontScaling={false}>
+        {initials || "?"}
+      </Text>
     </View>
   );
 }

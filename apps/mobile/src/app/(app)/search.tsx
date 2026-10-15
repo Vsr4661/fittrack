@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { Avatar, Badge, EmptyState, ErrorState, SearchField } from "@/components/ui";
@@ -39,25 +39,25 @@ export default function SearchScreen() {
             ) : null
           }
           renderItem={({ item }) => (
-            <Link href={`/user/${item.username}`} asChild>
-              <Pressable
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-                accessibilityRole="link"
-                accessibilityLabel={`${item.displayName}, @${item.username}${item.isFollowing ? ", following" : ""}`}
-              >
-                <Avatar name={item.displayName} userId={item.id} size={44} />
-                <View style={styles.text}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {item.displayName}
-                  </Text>
-                  <Text style={styles.username} numberOfLines={1}>
-                    @{item.username}
-                  </Text>
-                </View>
-                {item.isFollowing ? <Badge label="Following" icon="checkmark" /> : null}
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
-            </Link>
+            // Plain Pressable: <Link asChild> drops a style function (see LeaderboardRow)
+            <Pressable
+              onPress={() => router.push(`/user/${item.username}`)}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              accessibilityRole="link"
+              accessibilityLabel={`${item.displayName}, @${item.username}${item.isFollowing ? ", following" : ""}`}
+            >
+              <Avatar name={item.displayName} userId={item.id} size={44} />
+              <View style={styles.text}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {item.displayName}
+                </Text>
+                <Text style={styles.username} numberOfLines={1}>
+                  @{item.username}
+                </Text>
+              </View>
+              {item.isFollowing ? <Badge label="Following" icon="checkmark" /> : null}
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </Pressable>
           )}
         />
       )}

@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
-import { Badge, Card, ErrorState, KeyboardScreen, Skeleton, toast } from "@/components/ui";
+import { Badge, Card, Confetti, ErrorState, KeyboardScreen, Skeleton, toast } from "@/components/ui";
 import { useMe } from "@/features/auth/hooks";
 import { AuthorRow } from "@/features/social/components/AuthorRow";
 import { CommentsSection } from "@/features/social/components/CommentsSection";
+import { NewRecordBanner, useNewRecords } from "@/features/stats/components/NewRecordBanner";
 import { LikeButton } from "@/features/social/components/LikeButton";
 import { formatDuration, formatVolume, formatWeight, formatWorkoutDate } from "@/features/workouts/format";
 import { useDeleteWorkout, useWorkout } from "@/features/workouts/hooks";
@@ -21,8 +22,9 @@ const visibilityBadge: Record<Visibility, { label: string; icon: "globe-outline"
 export default function WorkoutDetailScreen() {
   const styles = useStyles();
   const { colors } = useTheme();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, celebrate } = useLocalSearchParams<{ id: string; celebrate?: string }>();
   const workout = useWorkout(id);
+  const newRecords = useNewRecords(id, celebrate === "1"); // before the early returns: hooks run every render
   const me = useMe();
   const deleteWorkout = useDeleteWorkout();
 
@@ -66,6 +68,7 @@ export default function WorkoutDetailScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <NewRecordBanner records={newRecords} />
         <AuthorRow author={w.author} subtitle={formatWorkoutDate(w.startedAt)} />
 
         <View style={styles.titleBlock}>
@@ -112,6 +115,8 @@ export default function WorkoutDetailScreen() {
 
         <CommentsSection workoutId={w.id} myUserId={me.data?.id} workoutOwnerId={w.userId} />
       </ScrollView>
+      {/* Over the whole screen, outside the ScrollView so it doesn't scroll away */}
+      {newRecords.length > 0 ? <Confetti /> : null}
     </KeyboardScreen>
   );
 }

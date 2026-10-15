@@ -4,18 +4,8 @@ import { Pressable, Text, View } from "react-native";
 import { ActionSheet, Badge, Button, Card } from "@/components/ui";
 import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
 import type { DraftExercise, DraftSet } from "../draftStore";
+import { muscleLabel } from "../format";
 import { DONE_COL, SET_COL, SetRow } from "./SetRow";
-
-const muscleLabel: Record<string, string> = {
-  CHEST: "Chest",
-  BACK: "Back",
-  LEGS: "Legs",
-  SHOULDERS: "Shoulders",
-  ARMS: "Arms",
-  CORE: "Core",
-  FULL_BODY: "Full body",
-  CARDIO: "Cardio",
-};
 
 interface ExerciseCardProps {
   entry: DraftExercise;

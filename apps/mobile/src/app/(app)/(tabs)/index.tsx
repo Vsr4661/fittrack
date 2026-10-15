@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ActionSheet, Avatar, Button, Card, EmptyState, ErrorState, ProgressRing, useCountUp, WorkoutCardSkeleton } from "@/components/ui";
 import { useMe } from "@/features/auth/hooks";
 import { useWeeklyGoal } from "@/features/dashboard/goalStore";
+import { HomeShortcuts } from "@/features/stats/components/HomeShortcuts";
 import { computeStreak, greeting, workoutsThisWeek } from "@/features/dashboard/stats";
 import { WorkoutCard } from "@/features/workouts/components/WorkoutCard";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
@@ -25,8 +26,8 @@ export default function HomeScreen() {
   const [goalSheetOpen, setGoalSheetOpen] = useState(false);
 
   const workouts = useMemo(() => history.data?.pages.flatMap((p) => p.items) ?? [], [history.data]);
-  // Computed on-device from history already loaded (first page = latest 20).
-  // Exact all-time stats come with the stats endpoint in the Progress step.
+  // Computed on-device from history already loaded (first page = latest 20):
+  // enough for a streak and this week. The Progress screen has the 12-week view.
   const { streak, thisWeek } = useMemo(() => {
     const now = new Date();
     const startedAts = workouts.map((w) => w.startedAt);
@@ -80,6 +81,8 @@ export default function HomeScreen() {
         </View>
 
         <Button title={hasDraft ? "Resume workout" : "Start workout"} icon={hasDraft ? "play-forward" : "play"} size="lg" onPress={startOrResume} />
+
+        <HomeShortcuts />
 
         {/* ── Recent workouts ──────────────────────── */}
         <View style={styles.sectionHeader}>

@@ -4,21 +4,10 @@ import { useMemo, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { Badge, EmptyState, ErrorState, SearchField, Skeleton } from "@/components/ui";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
+import { muscleLabel } from "@/features/workouts/format";
 import { useExercises } from "@/features/workouts/hooks";
-import type { MuscleGroup } from "@/features/workouts/types";
 import { haptics } from "@/lib/haptics";
 import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
-
-const muscleLabel: Record<MuscleGroup, string> = {
-  CHEST: "Chest",
-  BACK: "Back",
-  LEGS: "Legs",
-  SHOULDERS: "Shoulders",
-  ARMS: "Arms",
-  CORE: "Core",
-  FULL_BODY: "Full body",
-  CARDIO: "Cardio",
-};
 
 export default function PickExerciseScreen() {
   const styles = useStyles();

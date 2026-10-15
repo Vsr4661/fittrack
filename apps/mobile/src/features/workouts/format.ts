@@ -1,3 +1,4 @@
+import type { MuscleGroup } from "./types";
 // Pure display helpers: the API stores exact integers (grams, seconds), the UI
 // shows human units. Keeping conversion in one place avoids rounding drift.
 
@@ -53,3 +54,15 @@ export function defaultWorkoutTitle(date: Date = new Date()): string {
   const part = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
   return `${part} workout`;
 }
+
+/** Display names for muscle groups (shared by the picker, logger and PR cards). */
+export const muscleLabel: Record<MuscleGroup, string> = {
+  CHEST: "Chest",
+  BACK: "Back",
+  LEGS: "Legs",
+  SHOULDERS: "Shoulders",
+  ARMS: "Arms",
+  CORE: "Core",
+  FULL_BODY: "Full body",
+  CARDIO: "Cardio",
+};
