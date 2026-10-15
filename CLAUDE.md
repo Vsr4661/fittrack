@@ -81,6 +81,8 @@ npm run typecheck -w apps/mobile
 - All HTTP goes through `src/lib/api.ts`; features never touch tokens.
 - Every screen handles loading, error (with retry) and empty states.
 - Install native packages with `npx expo install`, never plain `npm i`.
+- Visual rules live in `apps/mobile/DESIGN.md` (read it before UI work; the
+  code in `src/theme/` wins if they disagree, then update the doc).
 - Styles come from `@/theme` via `makeStyles((t) => ...)`; use semantic color roles
   (`surface`, `textMuted`, `primaryText`), never hex values. White text only on
   `primary` (#D63F0A, 4.59:1); the brighter `brand` orange is for graphics only.

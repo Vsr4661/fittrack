@@ -86,7 +86,7 @@ fastest focused logger). Future work must not invent a positioning claim.
 - No logo or illustration assets beyond the Expo template icons; the current
   mark is an icon glyph in a tile.
 - Design-system code is the visual source of truth today
-  (`src/theme/`, `src/components/ui/`); there is no DESIGN.md yet.
+  (`src/theme/`, `src/components/ui/`); `DESIGN.md` documents it.
 
 ## Product Principles
 

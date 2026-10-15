@@ -1,0 +1,693 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T16:48:58.453Z",
+  "title": "Design System: FitTrack",
+  "extensions": {
+    "colorMeta": {
+      "effort-orange": {
+        "role": "primary",
+        "displayName": "Effort Orange",
+        "canonical": "#FF5A1F",
+        "tonalRamp": [
+          "#4D1400",
+          "#852300",
+          "#BD3200",
+          "#F54000",
+          "#FF652E",
+          "#FF8E66",
+          "#FFBBA3",
+          "#FFECE5"
+        ],
+        "theme": "light"
+      },
+      "ember": {
+        "role": "primary",
+        "displayName": "Ember",
+        "canonical": "#D63F0A",
+        "tonalRamp": [
+          "#491603",
+          "#7F2506",
+          "#B43508",
+          "#EA450B",
+          "#F66937",
+          "#F8916D",
+          "#FBBDA7",
+          "#FEEDE7"
+        ],
+        "theme": "light"
+      },
+      "ember-text": {
+        "role": "primary",
+        "displayName": "Ember Text",
+        "canonical": "#C93A08",
+        "tonalRamp": [
+          "#4A1503",
+          "#802505",
+          "#B53407",
+          "#EB4409",
+          "#F76836",
+          "#F9906C",
+          "#FBBDA7",
+          "#FEEDE6"
+        ],
+        "theme": "light"
+      },
+      "ember-text-dark": {
+        "role": "primary",
+        "displayName": "Ember Text (dark)",
+        "canonical": "#FF7A45",
+        "tonalRamp": [
+          "#4D1600",
+          "#852600",
+          "#BD3600",
+          "#F54600",
+          "#FF692E",
+          "#FF9266",
+          "#FFBDA3",
+          "#FFEDE5"
+        ],
+        "theme": "dark"
+      },
+      "ember-wash": {
+        "role": "primary",
+        "displayName": "Ember Wash",
+        "canonical": "#FFEDE5",
+        "tonalRamp": [
+          "#4D1800",
+          "#852900",
+          "#BD3A00",
+          "#F54B00",
+          "#FF6E2E",
+          "#FF9566",
+          "#FFBFA3",
+          "#FFEDE5"
+        ],
+        "theme": "light"
+      },
+      "ember-on-wash": {
+        "role": "primary",
+        "displayName": "Ember on Wash",
+        "canonical": "#B83508",
+        "tonalRamp": [
+          "#491503",
+          "#7F2506",
+          "#B53408",
+          "#EB440A",
+          "#F66837",
+          "#F9906C",
+          "#FBBDA7",
+          "#FEEDE7"
+        ],
+        "theme": "light"
+      },
+      "ember-deep": {
+        "role": "primary",
+        "displayName": "Ember Deep",
+        "canonical": "#9A2C06",
+        "tonalRamp": [
+          "#4A1503",
+          "#802405",
+          "#B63407",
+          "#EC4309",
+          "#F76736",
+          "#F9906C",
+          "#FCBCA7",
+          "#FEEDE6"
+        ],
+        "theme": "light"
+      },
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "canonical": "#F8FAFC",
+        "tonalRamp": [
+          "#172636",
+          "#28425D",
+          "#395E84",
+          "#497AAB",
+          "#6D96C0",
+          "#94B2D1",
+          "#BFD1E3",
+          "#EDF2F7"
+        ],
+        "theme": "light"
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#262626",
+          "#424242",
+          "#5E5E5E",
+          "#7A7A7A",
+          "#969696",
+          "#B3B3B3",
+          "#D1D1D1",
+          "#F2F2F2"
+        ],
+        "theme": "light"
+      },
+      "chalk-dust": {
+        "role": "neutral",
+        "displayName": "Chalk Dust",
+        "canonical": "#F1F5F9",
+        "tonalRamp": [
+          "#172636",
+          "#28425D",
+          "#395E84",
+          "#497AAB",
+          "#6D96C0",
+          "#94B3D1",
+          "#BFD1E3",
+          "#EDF2F7"
+        ],
+        "theme": "light"
+      },
+      "chalk-line": {
+        "role": "neutral",
+        "displayName": "Chalk Line",
+        "canonical": "#E2E8F0",
+        "tonalRamp": [
+          "#1A2532",
+          "#2D3F57",
+          "#405A7C",
+          "#5375A1",
+          "#7592B8",
+          "#9AAFCB",
+          "#C2CFE0",
+          "#EEF2F6"
+        ],
+        "theme": "light"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#111827",
+        "tonalRamp": [
+          "#172135",
+          "#28395C",
+          "#395183",
+          "#4A69AA",
+          "#6D88C0",
+          "#94A8D1",
+          "#BFCBE3",
+          "#EDF0F7"
+        ],
+        "theme": "light"
+      },
+      "graphite": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#5B6B7F",
+        "tonalRamp": [
+          "#20262D",
+          "#37414D",
+          "#4F5D6E",
+          "#66788F",
+          "#8595A8",
+          "#A6B1BF",
+          "#CAD0D9",
+          "#F0F2F4"
+        ],
+        "theme": "light"
+      },
+      "iron": {
+        "role": "neutral",
+        "displayName": "Iron",
+        "canonical": "#0B0F17",
+        "tonalRamp": [
+          "#192234",
+          "#2B3B5A",
+          "#3D5380",
+          "#4F6CA6",
+          "#728ABB",
+          "#97AACE",
+          "#C1CCE1",
+          "#EEF1F7"
+        ],
+        "theme": "dark"
+      },
+      "cast-iron": {
+        "role": "neutral",
+        "displayName": "Cast Iron",
+        "canonical": "#161C27",
+        "tonalRamp": [
+          "#1C2331",
+          "#303D55",
+          "#445779",
+          "#58709D",
+          "#798EB4",
+          "#9DACC8",
+          "#C4CDDE",
+          "#EFF1F6"
+        ],
+        "theme": "dark"
+      },
+      "iron-dust": {
+        "role": "neutral",
+        "displayName": "Iron Dust",
+        "canonical": "#1F2937",
+        "tonalRamp": [
+          "#1C2431",
+          "#303F55",
+          "#445A79",
+          "#58759D",
+          "#7992B4",
+          "#9DAFC8",
+          "#C4CFDE",
+          "#EFF2F6"
+        ],
+        "theme": "dark"
+      },
+      "iron-line": {
+        "role": "neutral",
+        "displayName": "Iron Line",
+        "canonical": "#334155",
+        "tonalRamp": [
+          "#1D2530",
+          "#323F53",
+          "#475A76",
+          "#5C7599",
+          "#7C92B1",
+          "#9FAFC6",
+          "#C6CFDD",
+          "#EFF2F5"
+        ],
+        "theme": "dark"
+      },
+      "bone": {
+        "role": "neutral",
+        "displayName": "Bone",
+        "canonical": "#F1F5F9",
+        "tonalRamp": [
+          "#172636",
+          "#28425D",
+          "#395E84",
+          "#497AAB",
+          "#6D96C0",
+          "#94B3D1",
+          "#BFD1E3",
+          "#EDF2F7"
+        ],
+        "theme": "dark"
+      },
+      "pewter": {
+        "role": "neutral",
+        "displayName": "Pewter",
+        "canonical": "#94A3B8",
+        "tonalRamp": [
+          "#1F252E",
+          "#354050",
+          "#4B5B71",
+          "#627693",
+          "#8193AC",
+          "#A3B0C2",
+          "#C8D0DA",
+          "#F0F2F5"
+        ],
+        "theme": "dark"
+      },
+      "done-green": {
+        "role": "status",
+        "displayName": "Done Green",
+        "canonical": "#166534",
+        "tonalRamp": [
+          "#0E3F20",
+          "#186D38",
+          "#229B50",
+          "#2CC967",
+          "#53DA86",
+          "#81E4A7",
+          "#B4EFCA",
+          "#EAFAF0"
+        ],
+        "theme": "light"
+      },
+      "done-wash": {
+        "role": "status",
+        "displayName": "Done Wash",
+        "canonical": "#ECFDF3",
+        "tonalRamp": [
+          "#074521",
+          "#0D7839",
+          "#12AB51",
+          "#17DD69",
+          "#42EB88",
+          "#75F0A8",
+          "#ACF6CB",
+          "#E8FDF0"
+        ],
+        "theme": "light"
+      },
+      "done-green-dark": {
+        "role": "status",
+        "displayName": "Done Green Dark",
+        "canonical": "#4ADE80",
+        "tonalRamp": [
+          "#0C411F",
+          "#147036",
+          "#1DA04D",
+          "#26CF64",
+          "#4EDF83",
+          "#7EE7A4",
+          "#B1F1C9",
+          "#E9FBF0"
+        ],
+        "theme": "dark"
+      },
+      "warmup-amber": {
+        "role": "status",
+        "displayName": "Warmup Amber",
+        "canonical": "#92400E",
+        "tonalRamp": [
+          "#461F07",
+          "#79350C",
+          "#AC4B11",
+          "#DF6215",
+          "#ED8240",
+          "#F2A373",
+          "#F7C8AB",
+          "#FDF0E8"
+        ],
+        "theme": "light"
+      },
+      "warmup-wash": {
+        "role": "status",
+        "displayName": "Warmup Wash",
+        "canonical": "#FEF3C7",
+        "tonalRamp": [
+          "#4B3C01",
+          "#826902",
+          "#B99503",
+          "#F1C104",
+          "#FBD332",
+          "#FCDF69",
+          "#FDECA5",
+          "#FFFAE6"
+        ],
+        "theme": "light"
+      },
+      "warmup-amber-dark": {
+        "role": "status",
+        "displayName": "Warmup Amber Dark",
+        "canonical": "#F59E0B",
+        "tonalRamp": [
+          "#492F03",
+          "#7F5205",
+          "#B57507",
+          "#EB970A",
+          "#F7AF36",
+          "#F9C56C",
+          "#FBDCA7",
+          "#FEF5E7"
+        ],
+        "theme": "dark"
+      },
+      "danger-red": {
+        "role": "status",
+        "displayName": "Danger Red",
+        "canonical": "#B91C1C",
+        "tonalRamp": [
+          "#420A0A",
+          "#731111",
+          "#A41919",
+          "#D52020",
+          "#E44949",
+          "#EB7A7A",
+          "#F3AFAF",
+          "#FCE9E9"
+        ],
+        "theme": "light"
+      },
+      "danger-wash": {
+        "role": "status",
+        "displayName": "Danger Wash",
+        "canonical": "#FEE2E2",
+        "tonalRamp": [
+          "#4A0303",
+          "#800404",
+          "#B60606",
+          "#ED0808",
+          "#F83535",
+          "#FA6B6B",
+          "#FCA6A6",
+          "#FEE6E6"
+        ],
+        "theme": "light"
+      },
+      "danger-red-dark": {
+        "role": "status",
+        "displayName": "Danger Red Dark",
+        "canonical": "#F87171",
+        "tonalRamp": [
+          "#490404",
+          "#7E0606",
+          "#B40909",
+          "#E90C0C",
+          "#F53838",
+          "#F86D6D",
+          "#FBA8A8",
+          "#FEE7E7"
+        ],
+        "theme": "dark"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Home greeting name, hero wordmark, big stat numbers."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Screen titles and the workout title."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Card and section headings, exercise names."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, inputs, comments."
+      },
+      "body-strong": {
+        "displayName": "Body Strong",
+        "purpose": "Names in lists, emphasized body."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, chips, field labels."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Metadata, stat labels, hints."
+      },
+      "overline": {
+        "displayName": "Overline",
+        "purpose": "Badges and column headers, uppercase."
+      },
+      "number": {
+        "displayName": "Number",
+        "purpose": "Every changing or column-aligned number, tabular figures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sm",
+        "value": "0 1px 3px rgba(15,23,42,0.08)",
+        "purpose": "Raised cards, stat tiles, primary buttons (Android elevation 1)."
+      },
+      {
+        "name": "md",
+        "value": "0 4px 12px rgba(15,23,42,0.10)",
+        "purpose": "Hero logo tile, floating controls (elevation 4)."
+      },
+      {
+        "name": "lg",
+        "value": "0 10px 24px rgba(15,23,42,0.14)",
+        "purpose": "Things that float over the page: auth card, rest-timer panel, toasts (elevation 10)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press",
+        "value": "spring(damping 20, stiffness 400) to scale 0.97; release spring(damping 15, stiffness 300)",
+        "purpose": "PressableScale: buttons and pressable cards."
+      },
+      {
+        "name": "tab-indicator",
+        "value": "spring(damping 18, stiffness 220)",
+        "purpose": "Active-tab pill sliding between tabs."
+      },
+      {
+        "name": "ring-fill",
+        "value": "900ms ease-out cubic",
+        "purpose": "Progress ring fill."
+      },
+      {
+        "name": "toast-ios",
+        "value": "slide in from top, spring damping 18; fade out 200ms",
+        "purpose": "iOS banner toast."
+      },
+      {
+        "name": "toast-android",
+        "value": "slide in from bottom 220ms; fade out 180ms",
+        "purpose": "Android snackbar toast (unverified on device)."
+      },
+      {
+        "name": "reduce-motion",
+        "value": "jump to end state",
+        "purpose": "All springs and fills when the OS Reduce Motion setting is on."
+      }
+    ],
+    "textScale": {
+      "chrome": 1.3,
+      "numeric": 1.6,
+      "display": 1.6
+    },
+    "touchTarget": {
+      "ios": "44pt",
+      "android": "48dp"
+    },
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "portrait only; content max-width 720pt"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ember fill with a white label; one per screen (Start workout, Save, Log in).",
+      "html": "<button class=\"ds-btn-primary\">Start workout</button>",
+      "css": ".ds-btn-primary{font-family: Inter, -apple-system, system-ui, sans-serif;min-height:48px;padding:0 16px;border:none;border-radius:12px;background:#D63F0A;color:#fff;font-weight:600;font-size:14px;line-height:18px;box-shadow:0 1px 3px rgba(15,23,42,.08);transition:transform .12s cubic-bezier(.2,.8,.2,1)}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Chalk Dust fill, Ink label; the quieter companion action.",
+      "html": "<button class=\"ds-btn-secondary\">Add exercise</button>",
+      "css": ".ds-btn-secondary{font-family: Inter, -apple-system, system-ui, sans-serif;min-height:48px;padding:0 16px;border:none;border-radius:12px;background:#F1F5F9;color:#111827;font-weight:600;font-size:14px;transition:transform .12s}.ds-btn-secondary:active{transform:scale(.97)}.ds-btn-secondary:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "No fill, Ember Text label; low-emphasis actions like See all.",
+      "html": "<button class=\"ds-btn-ghost\">See all</button>",
+      "css": ".ds-btn-ghost{font-family: Inter, -apple-system, system-ui, sans-serif;min-height:48px;padding:0 16px;border:none;border-radius:12px;background:transparent;color:#C93A08;font-weight:600;font-size:14px}.ds-btn-ghost:hover{background:#FFEDE5}.ds-btn-ghost:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled field with a 1.5pt border that turns Effort Orange on focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Name</span><input class=\"ds-input\" placeholder=\"Your name\"></label>",
+      "css": ".ds-field{font-family: Inter, -apple-system, system-ui, sans-serif;display:flex;flex-direction:column;gap:6px}.ds-field-label{font-weight:600;font-size:14px;color:#111827}.ds-input{font-family: Inter, -apple-system, system-ui, sans-serif;min-height:50px;padding:0 14px;border:1.5px solid #E2E8F0;border-radius:12px;background:#fff;color:#111827;font-size:16px;outline:none;transition:border-color .15s}.ds-input::placeholder{color:#5B6B7F}.ds-input:focus,.ds-input:focus-visible{border-color:#FF5A1F}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Borderless Chalk Dust search bar with a leading icon.",
+      "html": "<div class=\"ds-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#5B6B7F\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/></svg><input class=\"ds-search-input\" placeholder=\"Search exercises\"></div>",
+      "css": ".ds-search{font-family: Inter, -apple-system, system-ui, sans-serif;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-radius:12px;background:#F1F5F9}.ds-search:focus-within{box-shadow:0 0 0 2px #FF5A1F}.ds-search-input{flex:1;border:none;background:transparent;font-size:16px;color:#111827;outline:none}.ds-search-input::placeholder{color:#5B6B7F}"
+    },
+    {
+      "name": "Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Pill filters; the selected one switches to an Ember fill.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-chip-selected\">3 / week</button><button class=\"ds-chip\">4 / week</button><button class=\"ds-chip\">5 / week</button></div>",
+      "css": ".ds-chips{display:flex;gap:8px}.ds-chip{font-family: Inter, -apple-system, system-ui, sans-serif;min-height:36px;padding:6px 14px;border:none;border-radius:999px;background:#F1F5F9;color:#111827;font-weight:600;font-size:14px}.ds-chip:hover{background:#E2E8F0}.ds-chip-selected,.ds-chip-selected:hover{background:#D63F0A;color:#fff}.ds-chip:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}"
+    },
+    {
+      "name": "Workout Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Raised Surface White card on Chalk with a soft lift, title, badge and three stat tiles.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-head\"><span class=\"ds-card-title\">Push day</span><span class=\"ds-badge\">Everyone</span></div><div class=\"ds-stats\"><div class=\"ds-stat\"><b>48m</b><span>Duration</span></div><div class=\"ds-stat\"><b>6,240 kg</b><span>Volume</span></div><div class=\"ds-stat\"><b>18</b><span>Sets</span></div></div></div>",
+      "css": ".ds-card{font-family: Inter, -apple-system, system-ui, sans-serif;background:#fff;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,23,42,.08);transition:transform .12s}.ds-card:active{transform:scale(.97)}.ds-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.ds-card-title{font-weight:700;font-size:18px;line-height:24px;color:#111827}.ds-badge{padding:3px 8px;border-radius:999px;background:#F1F5F9;color:#5B6B7F;font-weight:600;font-size:12px;letter-spacing:.6px;text-transform:uppercase}.ds-stats{display:flex;gap:8px}.ds-stat{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 4px;border-radius:12px;background:#F1F5F9}.ds-stat b{font-size:18px;font-variant-numeric:tabular-nums;color:#111827}.ds-stat span{font-weight:500;font-size:13px;color:#5B6B7F}"
+    },
+    {
+      "name": "Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-indicator",
+      "description": "Four tabs; the active one sits in a sliding Ember Wash pill.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-tab-active\"><i></i>Home</a><a class=\"ds-tab\"><i></i>Feed</a><a class=\"ds-tab\"><i></i>Workouts</a><a class=\"ds-tab\"><i></i>Profile</a></nav>",
+      "css": ".ds-tabs{font-family: Inter, -apple-system, system-ui, sans-serif;display:flex;background:#fff;padding:8px 0;border-top:1px solid #E2E8F0}.ds-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;font-weight:600;font-size:12px;color:#5B6B7F;cursor:pointer}.ds-tab i{width:56px;height:32px;border-radius:999px;background:transparent;transition:background .2s}.ds-tab-active{color:#C93A08}.ds-tab-active i{background:#FFEDE5}.ds-tab:hover i{background:#F1F5F9}.ds-tab-active:hover i{background:#FFEDE5}"
+    },
+    {
+      "name": "Progress Ring",
+      "kind": "custom",
+      "refersTo": "effort-orange",
+      "description": "Signature weekly-goal ring: Chalk Dust track, Effort Orange arc, tabular center number.",
+      "html": "<div class=\"ds-ring\"><svg width=\"96\" height=\"96\" viewBox=\"0 0 96 96\"><circle cx=\"48\" cy=\"48\" r=\"43\" stroke=\"#F1F5F9\" stroke-width=\"10\" fill=\"none\"/><circle class=\"ds-ring-arc\" cx=\"48\" cy=\"48\" r=\"43\" stroke=\"#FF5A1F\" stroke-width=\"10\" fill=\"none\" stroke-linecap=\"round\" stroke-dasharray=\"270.2\" stroke-dashoffset=\"90\" transform=\"rotate(-90 48 48)\"/></svg><span>2/3</span></div>",
+      "css": ".ds-ring{font-family: Inter, -apple-system, system-ui, sans-serif;position:relative;width:96px;height:96px;display:grid;place-items:center}.ds-ring svg{position:absolute;inset:0}.ds-ring span{font-weight:700;font-size:18px;font-variant-numeric:tabular-nums;color:#111827}.ds-ring-arc{transition:stroke-dashoffset .9s cubic-bezier(.33,1,.68,1)}.ds-ring:hover .ds-ring-arc{stroke-dashoffset:0}@media (prefers-reduced-motion: reduce){.ds-ring-arc{transition:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Training Floor",
+    "overview": "A good gym floor is calm. The walls are plain, the equipment is where you\nexpect it, and the only bright things are the ones that matter: the clock,\nthe plates, the person next to you hitting a lift. FitTrack's screens work\nthe same way. Surfaces are quiet Chalk (light) or Iron (dark), type is a\nsingle family set firmly, and orange appears only where effort happens:\nthe Start button, a completed ring, a streak, the active tab.\n\nThe app is used in two very different moments. Mid-workout, with sweaty hands\nand divided attention, everything must read at a glance and be hittable\nwithout aiming: big targets, numbers in tabular figures, one deliberate tick\nper set with a haptic to confirm it. Between workouts, the feed and profiles\ncan breathe a little more, but they stay inside the same calm world rather\nthan switching to a louder \"social\" skin.\n\nControls feel confident and tactile: solid fills, a slight shrink under the\nfinger, a real haptic on the moments that count. Depth is a soft lift, never\ndrama. The world is native on each platform where conventions differ (touch\ntargets, transient feedback, titles), and identical everywhere else.",
+    "keyCharacteristics": [
+      "Quiet slate surfaces; orange reserved for effort and the one primary action.",
+      "Two oranges with strictly separate jobs: Effort Orange for graphics, Ember for fills with text.",
+      "One typeface (Inter), heavy at the top of the hierarchy, tabular figures for every number.",
+      "Large touch targets (44pt iOS / 48dp Android minimum) and text that scales with the OS setting.",
+      "Soft lift in light mode, tonal layering plus hairline borders in dark mode.",
+      "Contrast is measured on every surface a color sits on, not eyeballed."
+    ],
+    "rules": [
+      {
+        "name": "The Two Oranges Rule",
+        "body": "Effort Orange draws; Ember carries words. If something has text on it or in it, it is Ember (fill) or Ember Text (type), never Effort Orange.",
+        "section": "colors"
+      },
+      {
+        "name": "The Every Surface Rule",
+        "body": "A text color is approved only after it measures ≥4.5:1 on *every* surface it can sit on (Surface White, Chalk, Chalk Dust, and any wash), not just white. Two tokens once shipped that passed on white only.",
+        "section": "colors"
+      },
+      {
+        "name": "The Effort Rule",
+        "body": "Orange marks effort and the one primary action on a screen. A screen with orange in more than a handful of places has lost its signal.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Any number that changes or aligns with others uses tabular figures (`fontVariant: [\"tabular-nums\"]`), so \"82.5\" and \"100\" take the same width per digit and timers don't jitter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Text Scale Rule",
+        "body": "Text follows the OS text-size setting. Content scales fully; text inside fixed-width slots is capped with `maxFontSizeMultiplier`: chrome (tab labels, column headers, badges, stat labels) at 1.3×, numbers inside fixed controls and already-huge display text at 1.6×. In narrow slots, prefer `numberOfLines={1}` + `adjustsFontSizeToFit` over wrapping mid-word.",
+        "section": "typography"
+      },
+      {
+        "name": "The Soft Lift Rule",
+        "body": "Shadows only say \"this is a separate object\". They never get bigger to signal importance; importance comes from color and size.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use semantic color roles from `@/theme` (`surface`, `textMuted`, `primaryText`) and `makeStyles`, never hex values in screens.",
+      "Do put white text only on Ember (4.59:1) or the hero gradient.",
+      "Do measure every new text/background pair on every surface it can sit on, in both themes, before shipping it.",
+      "Do keep every touch target at least `MIN_TOUCH` (44pt iOS / 48dp Android).",
+      "Do use tabular figures for any number that changes or sits in a column.",
+      "Do respect Reduce Motion: springs and fills jump straight to their end state.",
+      "Do give every screen loading, empty and error (with retry) states built from the shared components."
+    ],
+    "donts": [
+      "Don't put text on Effort Orange (3.12:1); it is for graphics only.",
+      "Don't add a second typeface or a second icon set (Ionicons is the only one).",
+      "Don't use shadows to signal importance or rely on them in dark mode.",
+      "Don't set a fixed `height` on anything that contains text; use `minHeight` so large text grows the control.",
+      "Don't fake features: unfinished things are labeled (e.g. a \"Soon\" badge), never decorated to look real."
+    ]
+  }
+}
