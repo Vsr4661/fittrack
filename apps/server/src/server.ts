@@ -2,6 +2,7 @@ import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/prisma.js";
+import { redis } from "./lib/redis.js";
 
 const app = createApp();
 
@@ -11,9 +12,9 @@ const server = app.listen(env.PORT, () => {
 
 function shutdown(signal: string) {
   logger.info(`${signal} received, shutting down gracefully`);
-  // Stop accepting requests first, then close the DB pool once in-flight ones finish
+  // Stop accepting requests first, then close connections once in-flight ones finish
   server.close(async (err) => {
-    await prisma.$disconnect();
+    await Promise.allSettled([prisma.$disconnect(), redis.quit()]);
     if (err) {
       logger.error({ err }, "Error during shutdown");
       process.exit(1);

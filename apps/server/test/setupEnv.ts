@@ -9,3 +9,7 @@ Object.assign(process.env, parseEnv(readFileSync(new URL("../.env.test", import.
 if (!process.env.DATABASE_URL?.includes("_test")) {
   throw new Error(`Refusing to run tests against a non-test database: ${process.env.DATABASE_URL}`);
 }
+// Tests flush Redis between cases, so they must use a separate logical DB (/1+)
+if (!/\/[1-9]\d*$/.test(process.env.REDIS_URL ?? "")) {
+  throw new Error(`Refusing to run tests against Redis DB 0: ${process.env.REDIS_URL}`);
+}

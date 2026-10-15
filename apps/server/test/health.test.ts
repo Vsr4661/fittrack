@@ -2,13 +2,14 @@ import { afterAll, afterEach, describe, expect, it, jest } from "@jest/globals";
 import request from "supertest";
 import { createApp } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
+import { closeConnections } from "./helpers.js";
 
 const app = createApp();
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
-afterAll(() => prisma.$disconnect());
+afterAll(closeConnections);
 
 describe("GET /api/v1/health (liveness)", () => {
   it("returns 200 with status ok", async () => {
@@ -28,11 +29,11 @@ describe("GET /api/v1/health (liveness)", () => {
 });
 
 describe("GET /api/v1/health/ready (readiness)", () => {
-  it("returns 200 when the database is reachable", async () => {
+  it("returns 200 when the database and Redis are reachable", async () => {
     const res = await request(app).get("/api/v1/health/ready");
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ status: "ready", checks: { database: "ok" } });
+    expect(res.body).toEqual({ status: "ready", checks: { database: "ok", redis: "ok" } });
   });
 
   it("returns 503 when the database is down", async () => {
@@ -41,7 +42,7 @@ describe("GET /api/v1/health/ready (readiness)", () => {
     const res = await request(app).get("/api/v1/health/ready");
 
     expect(res.status).toBe(503);
-    expect(res.body).toEqual({ status: "unavailable", checks: { database: "error" } });
+    expect(res.body).toEqual({ status: "unavailable", checks: { database: "error", redis: "ok" } });
   });
 });
 

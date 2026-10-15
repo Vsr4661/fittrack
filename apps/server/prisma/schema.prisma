@@ -51,9 +51,10 @@ model User {
   updatedAt    DateTime @updatedAt
 
   workouts        Workout[]
+  refreshTokens   RefreshToken[]
   customExercises Exercise[]
-  followers       Follow[]   @relation("following")
-  following       Follow[]   @relation("follower")
+  followers       Follow[]       @relation("following")
+  following       Follow[]       @relation("follower")
 
   @@map("users")
 }
@@ -70,6 +71,27 @@ model Follow {
   @@id([followerId, followingId])
   @@index([followingId])
   @@map("follows")
+}
+
+// ─── Auth ──────────────────────────────────────────────
+
+// Opaque refresh tokens, stored only as SHA-256 hashes. All tokens descending
+// from one login share a familyId, so reuse of a rotated token can revoke the
+// whole chain (= every token an attacker might hold).
+model RefreshToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @db.Uuid
+  familyId  String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([userId])
+  @@map("refresh_tokens")
 }
 
 // ─── Exercise catalog ──────────────────────────────────
