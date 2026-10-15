@@ -7,8 +7,10 @@
 adaptive
 
 One React Native (Expo SDK 57) codebase for iOS and Android. The owner's
-intent is to adapt patterns per OS where conventions differ; today the UI is
-one shared design and has only been verified on the iOS simulator.
+intent is to adapt patterns per OS where conventions differ: so far touch
+targets (44pt / 48dp), transient feedback (top banner / bottom snackbar),
+titles (iOS large titles / Android top app bar) and keyboard handling. Only
+the iOS simulator has been used for verification; Android is unverified.
 
 ## Users
 
@@ -59,6 +61,12 @@ fastest focused logger). Future work must not invent a positioning claim.
   and does nothing; real-time updates, photo uploads, push notifications and a
   paid tier (Stripe) are planned later phases.
 - **Units:** kilograms only (stored as integer grams). No lb setting yet.
+- **Devices:** phones only for now (owner decision). iPad runs the app in
+  iPhone compatibility mode (`supportsTablet: false`); proper tablet layouts
+  are a later phase, not a stretched phone UI.
+- **Orientation:** portrait only (owner decision). Reason: mid-workout the
+  phone is picked up and put down constantly; rotating would reshuffle the
+  set rows being edited.
 - **Runtime:** Expo Go during development, so only Expo-bundled native
   modules are available; Metro runs on port 8082.
 - **Process constraints** (from the owner): UI work must not change business

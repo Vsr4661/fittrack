@@ -3,7 +3,7 @@ import { useEffect, useState, type ComponentProps } from "react";
 import { Pressable, Text, View, type LayoutChangeEvent } from "react-native";
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from "react-native-reanimated";
 import { haptics } from "@/lib/haptics";
-import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
+import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
 
 // Typed from the public Tabs component, not an internal build path, so an
 // expo-router update can't silently break the import.
@@ -64,7 +64,7 @@ export function TabBar({ state, descriptors, navigation, insets }: TabBarProps) 
               accessibilityLabel={options.tabBarAccessibilityLabel ?? label}
             >
               <View style={styles.iconSlot}>{options.tabBarIcon?.({ focused, color, size: 24 })}</View>
-              <Text style={[styles.label, { color }, focused && styles.labelFocused]} numberOfLines={1}>
+              <Text style={[styles.label, { color }, focused && styles.labelFocused]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>
                 {label}
               </Text>
             </Pressable>

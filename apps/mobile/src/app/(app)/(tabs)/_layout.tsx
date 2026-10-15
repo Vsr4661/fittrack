@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Tabs } from "expo-router";
 import { Pressable } from "react-native";
-import { TabBar } from "@/components/ui";
+import { TabBar, USE_LARGE_TITLE } from "@/components/ui";
 import { useTheme } from "@/theme";
 
 export default function TabsLayout() {
@@ -21,6 +21,7 @@ export default function TabsLayout() {
         name="feed"
         options={{
           title: "Feed",
+          headerShown: !USE_LARGE_TITLE, // iOS: large title in the list; Android: top app bar
           tabBarIcon: ({ color, size }) => <Ionicons name="people" color={color} size={size} />,
           headerRight: () => (
             <Link href="/search" asChild>
@@ -35,6 +36,7 @@ export default function TabsLayout() {
         name="history"
         options={{
           title: "Workouts",
+          headerShown: !USE_LARGE_TITLE,
           tabBarIcon: ({ color, size }) => <Ionicons name="barbell" color={color} size={size} />,
         }}
       />

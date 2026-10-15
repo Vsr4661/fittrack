@@ -10,7 +10,7 @@ import { computeStreak, greeting, workoutsThisWeek } from "@/features/dashboard/
 import { WorkoutCard } from "@/features/workouts/components/WorkoutCard";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useWorkoutHistory } from "@/features/workouts/hooks";
-import { makeStyles, useTheme } from "@/theme";
+import { makeStyles, textScale, useTheme } from "@/theme";
 
 const RECENT_COUNT = 3;
 
@@ -48,13 +48,20 @@ export default function HomeScreen() {
       >
         {/* ── Greeting ─────────────────────────────── */}
         <View style={styles.header}>
-          <View style={styles.flex}>
+          {/* Greeting and name as separate lines: no comma to orphan when large
+              text wraps, and no eyebrow label above the heading */}
+          <View style={styles.flex} accessible accessibilityRole="header">
+            {/* Same cap as the name, so the greeting can never outgrow the name and flip the hierarchy */}
+            <Text style={styles.greeting} maxFontSizeMultiplier={textScale.display}>
+              {greeting(new Date())}
+            </Text>
+            {firstName ? (
+              <Text style={styles.name} maxFontSizeMultiplier={textScale.display}>
+                {firstName}
+              </Text>
+            ) : null}
             <Text style={styles.date}>
               {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
-            </Text>
-            <Text style={styles.greeting} accessibilityRole="header">
-              {greeting(new Date())}
-              {firstName ? `,\n${firstName}` : ""}
             </Text>
           </View>
           {me.data ? (
@@ -126,7 +133,9 @@ function StreakCard({ streak, loading }: { streak: number; loading: boolean }) {
         <Ionicons name="flame" size={22} color={colors.brand} />
       </View>
       <View accessible accessibilityLabel={`${streak} day streak. ${message}`}>
-        <Text style={styles.bigNumber}>{shown}</Text>
+        <Text style={styles.bigNumber} maxFontSizeMultiplier={textScale.display}>
+          {shown}
+        </Text>
         <Text style={styles.statLabel}>day streak</Text>
       </View>
       <Text style={styles.statHint}>{message}</Text>
@@ -141,7 +150,7 @@ function WeeklyCard({ done, goal, loading, onPress }: { done: number; goal: numb
   return (
     <Card style={styles.statCard} onPress={onPress} accessibilityLabel={`${done} of ${goal} workouts this week. Tap to change your goal`}>
       <ProgressRing progress={loading ? 0 : done / goal} size={84} strokeWidth={9} accessibilityLabel={`Weekly goal ${done} of ${goal}`}>
-        <Text style={styles.ringText}>
+        <Text style={styles.ringText} maxFontSizeMultiplier={textScale.numeric}>
           {done}
           <Text style={styles.ringGoal}>/{goal}</Text>
         </Text>
@@ -158,8 +167,9 @@ const useStyles = makeStyles((t) => ({
   content: { paddingHorizontal: t.spacing.lg, paddingBottom: t.spacing.xxl, gap: t.spacing.lg, maxWidth: 720, width: "100%", alignSelf: "center" },
   flex: { flex: 1 },
   header: { flexDirection: "row", alignItems: "flex-start", gap: t.spacing.md },
-  date: { ...t.typography.overline, color: t.colors.textMuted },
-  greeting: { ...t.typography.display, color: t.colors.text, marginTop: t.spacing.xs },
+  greeting: { ...t.typography.title, color: t.colors.textMuted },
+  name: { ...t.typography.display, color: t.colors.text },
+  date: { ...t.typography.label, color: t.colors.textMuted, marginTop: t.spacing.xs },
   statsRow: { flexDirection: "row", gap: t.spacing.md },
   statCard: { flex: 1, alignItems: "center", gap: t.spacing.sm, paddingVertical: t.spacing.xl },
   flameCircle: {
@@ -175,7 +185,8 @@ const useStyles = makeStyles((t) => ({
   statHint: { ...t.typography.caption, color: t.colors.textMuted, textAlign: "center" },
   ringText: { ...t.typography.title, color: t.colors.text, fontVariant: ["tabular-nums"] },
   ringGoal: { ...t.typography.bodyStrong, color: t.colors.textMuted },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: t.spacing.sm },
-  sectionTitle: { ...t.typography.heading, color: t.colors.text },
+  // flexWrap: at large text sizes "See all" moves to its own line instead of off-screen
+  sectionHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", marginTop: t.spacing.sm },
+  sectionTitle: { ...t.typography.heading, color: t.colors.text, flexShrink: 1 },
   seeAll: { ...t.typography.label, color: t.colors.primaryText, padding: t.spacing.sm },
 }));

@@ -24,7 +24,7 @@ export function Chip({ label, selected = false, onPress, icon }: ChipProps) {
         onPress?.();
       }}
       activeScale={0.94}
-      hitSlop={{ top: (MIN_TOUCH - 36) / 2, bottom: (MIN_TOUCH - 36) / 2 }} // 36pt pill, 44pt touch target
+      hitSlop={{ top: (MIN_TOUCH - 36) / 2, bottom: (MIN_TOUCH - 36) / 2 }} // 36pt pill, platform-minimum touch target
       style={[styles.chip, selected && styles.selected]}
       accessibilityRole="button"
       accessibilityState={{ selected }}
@@ -40,7 +40,8 @@ const useStyles = makeStyles((t) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: t.spacing.xs + 2,
-    height: 36,
+    minHeight: 36, // min, not fixed: large text grows the pill instead of clipping it
+    paddingVertical: t.spacing.xs + 2,
     paddingHorizontal: t.spacing.md + 2,
     borderRadius: t.radius.pill,
     backgroundColor: t.colors.surfaceMuted,

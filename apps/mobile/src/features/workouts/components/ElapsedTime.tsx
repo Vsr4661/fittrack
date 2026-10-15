@@ -7,7 +7,7 @@ import { formatClock } from "../format";
  * correct after the app was backgrounded, and only this tiny component
  * re-renders every second, not the whole workout screen.
  */
-export function ElapsedTime({ startedAt, style }: { startedAt: string; style?: TextStyle }) {
+export function ElapsedTime({ startedAt, style, maxFontSizeMultiplier }: { startedAt: string; style?: TextStyle; maxFontSizeMultiplier?: number }) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -16,5 +16,9 @@ export function ElapsedTime({ startedAt, style }: { startedAt: string; style?: T
   }, []);
 
   const elapsedSec = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
-  return <Text style={style}>{formatClock(elapsedSec)}</Text>;
+  return (
+    <Text style={style} maxFontSizeMultiplier={maxFontSizeMultiplier}>
+      {formatClock(elapsedSec)}
+    </Text>
+  );
 }

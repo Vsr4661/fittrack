@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { useEffect } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Card, EmptyState, toast } from "@/components/ui";
+import { Button, Card, EmptyState, KeyboardScreen, toast } from "@/components/ui";
 import { ElapsedTime } from "@/features/workouts/components/ElapsedTime";
 import { ExerciseCard } from "@/features/workouts/components/ExerciseCard";
 import { RestTimer } from "@/features/workouts/components/RestTimer";
@@ -12,7 +12,7 @@ import { draftToInput, useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useCreateWorkout } from "@/features/workouts/hooks";
 import { useRestTimer } from "@/features/workouts/restTimer";
 import { toApiError } from "@/lib/apiError";
-import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
+import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
 
 export default function NewWorkoutScreen() {
   const styles = useStyles();
@@ -68,7 +68,7 @@ export default function NewWorkoutScreen() {
   // ───────────────────────────────────────────────────────────────────────────
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={100}>
+    <KeyboardScreen style={styles.screen}>
       <Stack.Screen
         options={{
           headerLeft: () => (
@@ -79,7 +79,7 @@ export default function NewWorkoutScreen() {
           headerRight: () => (
             <View style={styles.timerPill} accessible accessibilityLabel="Workout duration">
               <Ionicons name="time-outline" size={16} color={colors.onPrimarySoft} />
-              <ElapsedTime startedAt={draft.startedAt} style={styles.timerText} />
+              <ElapsedTime startedAt={draft.startedAt} style={styles.timerText} maxFontSizeMultiplier={textScale.chrome} />
             </View>
           ),
         }}
@@ -135,7 +135,7 @@ export default function NewWorkoutScreen() {
           <Button title="Discard workout" variant="dangerGhost" onPress={discard} />
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardScreen>
   );
 }
 

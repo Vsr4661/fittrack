@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ActionSheet, Badge, Button, Card } from "@/components/ui";
-import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
+import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
 import type { DraftExercise, DraftSet } from "../draftStore";
 import { DONE_COL, SET_COL, SetRow } from "./SetRow";
 
@@ -58,9 +58,9 @@ export function ExerciseCard({ entry, onAddSet, onUpdateSet, onRemoveSet, onRemo
 
       {/* Column labels, aligned with the inputs below */}
       <View style={styles.columns} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Text style={[styles.columnLabel, { width: SET_COL }]}>SET</Text>
-        <Text style={[styles.columnLabel, styles.flex]}>KG</Text>
-        <Text style={[styles.columnLabel, styles.flex]}>REPS</Text>
+        <Text style={[styles.columnLabel, { width: SET_COL }]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>SET</Text>
+        <Text style={[styles.columnLabel, styles.flex]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>KG</Text>
+        <Text style={[styles.columnLabel, styles.flex]} numberOfLines={1} maxFontSizeMultiplier={textScale.chrome}>REPS</Text>
         <View style={{ width: DONE_COL }} />
       </View>
 

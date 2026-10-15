@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
-import { Pressable, Text } from "react-native";
-import Animated, { FadeOutUp, SlideInUp } from "react-native-reanimated";
+import { Platform, Pressable, Text } from "react-native";
+import Animated, { FadeOutDown, FadeOutUp, SlideInDown, SlideInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { create } from "zustand";
 import { haptics } from "@/lib/haptics";
@@ -39,6 +39,11 @@ export const toast = {
 
 const DURATION_MS = 3000;
 
+// Platform idiom (adaptive): iOS shows a banner from the top; Android shows a
+// Material snackbar at the bottom, above the navigation bar. (Android: unverified.)
+const IS_ANDROID = Platform.OS === "android";
+const ANDROID_NAV_BAR_CLEARANCE = 88; // keep the snackbar above the bottom tab bar
+
 /** Mounted once at the root. Shows one toast at a time; a new one replaces the old. */
 export function ToastHost() {
   const current = useToastStore((s) => s.current);
@@ -61,9 +66,12 @@ export function ToastHost() {
   return (
     <Animated.View
       key={current.id} // re-run the enter animation for each new toast
-      entering={SlideInUp.springify().damping(18)}
-      exiting={FadeOutUp.duration(200)}
-      style={[styles.wrapper, { top: insets.top + 8 }]}
+      entering={IS_ANDROID ? SlideInDown.duration(220) : SlideInUp.springify().damping(18)}
+      exiting={IS_ANDROID ? FadeOutDown.duration(180) : FadeOutUp.duration(200)}
+      style={[
+        styles.wrapper,
+        IS_ANDROID ? { bottom: insets.bottom + ANDROID_NAV_BAR_CLEARANCE } : { top: insets.top + 8 },
+      ]}
       pointerEvents="box-none"
     >
       <Pressable
@@ -92,7 +100,8 @@ const useStyles = makeStyles((t) => ({
     alignSelf: "stretch",
     paddingVertical: t.spacing.md,
     paddingHorizontal: t.spacing.lg,
-    borderRadius: t.radius.lg,
+    // Material snackbars use a small corner radius; iOS banners are rounder
+    borderRadius: IS_ANDROID ? t.radius.sm / 2 : t.radius.lg,
     backgroundColor: t.scheme === "dark" ? t.colors.surfaceMuted : t.colors.text,
     ...t.shadows.lg,
   },

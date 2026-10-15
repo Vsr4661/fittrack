@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { View } from "react-native";
-import { Button, EmptyState } from "@/components/ui";
+import { Button, EmptyState, LargeTitle } from "@/components/ui";
 import { WorkoutList } from "@/features/workouts/components/WorkoutList";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useWorkoutHistory } from "@/features/workouts/hooks";
@@ -20,6 +20,7 @@ export default function WorkoutHistoryScreen() {
     <View style={styles.container}>
       <WorkoutList
         query={history}
+        header={<LargeTitle title="Workouts" />}
         empty={<EmptyState icon="barbell-outline" title="No workouts yet" message="Start your first workout and it will show up here." />}
       />
       <View style={styles.cta}>

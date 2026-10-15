@@ -1,8 +1,8 @@
 import { useEffect, type ReactNode } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import Animated, { Easing, useAnimatedProps, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
-import { useTheme } from "@/theme";
+import { textScale, useTheme } from "@/theme";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -29,7 +29,11 @@ interface ProgressRingProps {
 export function ProgressRing({ progress, size = 96, strokeWidth = 10, children, accessibilityLabel, durationMs = 900, color }: ProgressRingProps) {
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
-  const radius = (size - strokeWidth) / 2;
+  // Grow with the user's text size (up to the numeric cap), so the number in
+  // the middle never spills outside the ring at large Dynamic Type sizes
+  const { fontScale } = useWindowDimensions();
+  const ringSize = Math.round(size * Math.min(Math.max(fontScale, 1), textScale.numeric));
+  const radius = (ringSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.min(1, Math.max(0, progress));
 
@@ -42,18 +46,18 @@ export function ProgressRing({ progress, size = 96, strokeWidth = 10, children, 
 
   return (
     <View
-      style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}
+      style={{ width: ringSize, height: ringSize, alignItems: "center", justifyContent: "center" }}
       accessible
       accessibilityRole="progressbar"
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }}
     >
       {/* rotate(-90): start the ring at 12 o'clock instead of 3 o'clock */}
-      <Svg width={size} height={size} style={{ position: "absolute", transform: [{ rotate: "-90deg" }] }}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={colors.surfaceMuted} strokeWidth={strokeWidth} fill="none" />
+      <Svg width={ringSize} height={ringSize} style={{ position: "absolute", transform: [{ rotate: "-90deg" }] }}>
+        <Circle cx={ringSize / 2} cy={ringSize / 2} r={radius} stroke={colors.surfaceMuted} strokeWidth={strokeWidth} fill="none" />
         <AnimatedCircle
-          cx={size / 2}
-          cy={size / 2}
+          cx={ringSize / 2}
+          cy={ringSize / 2}
           r={radius}
           stroke={color ?? colors.brand} // graphics, not text: the bright brand orange is fine here (3:1 rule)
           strokeWidth={strokeWidth}

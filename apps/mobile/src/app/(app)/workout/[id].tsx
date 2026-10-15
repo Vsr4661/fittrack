@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardScreen } from "@/components/ui";
 import { ErrorView, LoadingView } from "@/components/QueryState";
 import { useMe } from "@/features/auth/hooks";
 import { AuthorRow } from "@/features/social/components/AuthorRow";
@@ -39,11 +40,7 @@ export default function WorkoutDetailScreen() {
     ]);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={100} // header height, so the comment box clears the keyboard
-    >
+    <KeyboardScreen style={styles.flex}>
       <Stack.Screen
         options={{
           headerRight: isOwner
@@ -83,7 +80,7 @@ export default function WorkoutDetailScreen() {
 
         <CommentsSection workoutId={w.id} myUserId={me.data?.id} workoutOwnerId={w.userId} />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardScreen>
   );
 }
 

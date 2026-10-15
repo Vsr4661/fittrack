@@ -32,8 +32,26 @@ export const spacing = { xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, 
 
 export const radius = { sm: 8, md: 12, lg: 16, xl: 24, pill: 999 } as const;
 
-/** Apple HIG / Material minimum touch target. Icon buttons pad up to this. */
-export const MIN_TOUCH = 44;
+/**
+ * Minimum touch target: Apple HIG 44pt, Material 48dp. Per platform, because
+ * each OS's users (and its guideline) expect its own minimum.
+ */
+export const MIN_TOUCH = Platform.select({ ios: 44, default: 48 });
+
+/**
+ * Text-scaling policy (Dynamic Type / Android font scale). Content scales
+ * fully; dense UI chrome inside fixed-width slots is capped, the way iOS's own
+ * tab bar labels stay small (iOS shows the Large Content Viewer instead).
+ * Values are multipliers of the base size, passed as maxFontSizeMultiplier.
+ */
+export const textScale = {
+  /** Tab labels, column headers, badges, timer pills: small, space-bound. */
+  chrome: 1.3,
+  /** Numbers inside fixed controls: set inputs, ring centers. */
+  numeric: 1.6,
+  /** Already-huge display text: greeting name, stat numbers. */
+  display: 1.6,
+} as const;
 
 // ─── Shadows ───────────────────────────────────────────
 // iOS uses shadow* props, Android uses elevation. Dark mode relies on lighter

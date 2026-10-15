@@ -8,6 +8,8 @@ export { Chip } from "./Chip";
 export { EmptyState } from "./EmptyState";
 export { ErrorState } from "./ErrorState";
 export { Input } from "./Input";
+export { KeyboardScreen } from "./KeyboardScreen";
+export { LargeTitle, USE_LARGE_TITLE } from "./LargeTitle";
 export { PressableScale } from "./PressableScale";
 export { ProgressRing } from "./ProgressRing";
 export { Skeleton, WorkoutCardSkeleton } from "./Skeleton";

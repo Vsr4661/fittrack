@@ -3,7 +3,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { toast } from "@/components/ui";
 import { haptics } from "@/lib/haptics";
-import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
+import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
 import type { DraftSet } from "../draftStore";
 
 interface SetRowProps {
@@ -83,7 +83,7 @@ export function SetRow({ number, set, onChange, onRemove, onComplete }: SetRowPr
           accessibilityRole="button"
           accessibilityLabel={`${label}. Double tap to ${set.isWarmup ? "make it a working set" : "mark as warmup"}`}
         >
-          <Text style={[styles.badgeText, set.isWarmup && styles.badgeTextWarmup]}>{set.isWarmup ? "W" : number}</Text>
+          <Text style={[styles.badgeText, set.isWarmup && styles.badgeTextWarmup]} maxFontSizeMultiplier={textScale.chrome}>{set.isWarmup ? "W" : number}</Text>
         </Pressable>
 
         <TextInput
@@ -93,6 +93,7 @@ export function SetRow({ number, set, onChange, onRemove, onComplete }: SetRowPr
           placeholder="—"
           placeholderTextColor={colors.textMuted}
           keyboardType="decimal-pad"
+          maxFontSizeMultiplier={textScale.numeric}
           selectTextOnFocus // tap once to overwrite the copied value
           accessibilityLabel={`${label} weight in kilograms`}
         />
@@ -103,6 +104,7 @@ export function SetRow({ number, set, onChange, onRemove, onComplete }: SetRowPr
           placeholder="—"
           placeholderTextColor={colors.textMuted}
           keyboardType="number-pad"
+          maxFontSizeMultiplier={textScale.numeric}
           selectTextOnFocus
           accessibilityLabel={`${label} reps`}
         />
@@ -134,7 +136,7 @@ const useStyles = makeStyles((t) => ({
   rowDone: { backgroundColor: t.colors.successSoft },
   badge: {
     width: SET_COL,
-    height: SET_COL,
+    minHeight: SET_COL,
     borderRadius: t.radius.md,
     backgroundColor: t.colors.surfaceMuted,
     alignItems: "center",
@@ -145,7 +147,8 @@ const useStyles = makeStyles((t) => ({
   badgeTextWarmup: { color: t.colors.warning },
   input: {
     flex: 1,
-    height: 48,
+    minHeight: 48,
+    paddingVertical: t.spacing.xs,
     borderRadius: t.radius.md,
     backgroundColor: t.colors.surfaceMuted,
     textAlign: "center",
@@ -156,7 +159,8 @@ const useStyles = makeStyles((t) => ({
   inputDone: { backgroundColor: "transparent" },
   check: {
     width: DONE_COL,
-    height: DONE_COL,
+    minHeight: DONE_COL,
+    alignSelf: "stretch",
     borderRadius: t.radius.md,
     backgroundColor: t.colors.surfaceMuted,
     alignItems: "center",

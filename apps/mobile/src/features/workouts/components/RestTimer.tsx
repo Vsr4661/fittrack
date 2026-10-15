@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { ProgressRing } from "@/components/ui";
 import { haptics } from "@/lib/haptics";
-import { makeStyles, MIN_TOUCH } from "@/theme";
+import { makeStyles, MIN_TOUCH, textScale } from "@/theme";
 import { formatClock } from "../format";
 import { remainingSec, useRestTimer } from "../restTimer";
 
@@ -43,7 +43,9 @@ function RunningTimer({ endsAt }: { endsAt: number }) {
         durationMs={250}
         accessibilityLabel={`Rest timer, ${left} seconds left`}
       >
-        <Text style={styles.ringText}>{formatClock(left)}</Text>
+        <Text style={styles.ringText} maxFontSizeMultiplier={textScale.chrome}>
+          {formatClock(left)}
+        </Text>
       </ProgressRing>
 
       <View style={styles.flex}>
@@ -69,7 +71,9 @@ function TimerButton({ label, onPress, accessibilityLabel }: { label: string; on
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
-      <Text style={styles.buttonText}>{label}</Text>
+      <Text style={styles.buttonText} maxFontSizeMultiplier={textScale.chrome}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
