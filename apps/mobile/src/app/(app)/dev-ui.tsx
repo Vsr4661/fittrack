@@ -1,4 +1,4 @@
-import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import {
@@ -103,11 +103,23 @@ function Gallery() {
     router.replace("/workout/new");
   }, [params.seed, exercises.data]);
 
-  // Render auth screens while signed in, for before/after screenshots
-  // without logging the developer out. Buttons work but nothing is submitted
-  // unless you fill the form in.
-  if (params.preview === "login") return <LoginScreen />;
-  if (params.preview === "register") return <RegisterScreen />;
+  // Render auth screens while signed in, for screenshots without logging the
+  // developer out. The login <-> register links can't open from here: those
+  // routes only exist while signed OUT (Stack.Protected in app/_layout), so a
+  // banner says so instead of letting the preview pass for the real screen.
+  if (params.preview === "login" || params.preview === "register") {
+    return (
+      <View style={styles.previewScreen}>
+        <Stack.Screen options={{ title: params.preview === "login" ? "Login preview" : "Register preview" }} />
+        <View style={styles.previewBanner} accessibilityRole="alert">
+          <Text style={styles.previewText}>
+            Preview while signed in: links between login and register are off. Log out (Settings) to try the real flow.
+          </Text>
+        </View>
+        {params.preview === "login" ? <LoginScreen /> : <RegisterScreen />}
+      </View>
+    );
+  }
 
   const show = (name: string) => !params.section || params.section === name;
 
@@ -230,6 +242,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 const useStyles = makeStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.colors.background },
+  previewScreen: { flex: 1 },
+  previewBanner: { paddingHorizontal: t.spacing.lg, paddingVertical: t.spacing.sm, backgroundColor: t.colors.warningSoft },
+  previewText: { ...t.typography.caption, color: t.colors.warning, textAlign: "center" },
   content: { padding: t.spacing.lg, gap: t.spacing.xl, paddingBottom: t.spacing.xxxl },
   section: { gap: t.spacing.md },
   sectionTitle: { ...t.typography.overline, color: t.colors.textMuted },
