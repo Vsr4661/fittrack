@@ -1,0 +1,164 @@
+import { draftToInput, useWorkoutDraft, type WorkoutDraft } from "@/features/workouts/draftStore";
+import { formatClock, formatDuration, formatVolume, formatWeight, parseKgToGrams, parseReps } from "@/features/workouts/format";
+
+const bench = { id: "ex-bench", name: "Bench Press", muscleGroup: "CHEST" as const };
+const squat = { id: "ex-squat", name: "Back Squat", muscleGroup: "LEGS" as const };
+
+const store = () => useWorkoutDraft.getState();
+const draft = () => {
+  const d = store().draft;
+  if (!d) throw new Error("expected a draft");
+  return d;
+};
+
+beforeEach(() => {
+  store().discard();
+});
+
+describe("unit conversion", () => {
+  it.each([
+    ["82.5", 82_500],
+    ["82,5", 82_500], // comma-decimal locales (most of Europe)
+    ["100", 100_000],
+    [" 20 ", 20_000],
+    ["0.125", 125],
+    ["", null],
+    ["abc", null],
+    ["-5", null],
+    ["1.2.3", null],
+  ])("parseKgToGrams(%j) = %j", (input, expected) => {
+    expect(parseKgToGrams(input)).toBe(expected);
+  });
+
+  it("avoids floating point drift", () => {
+    // In JS, 2.01 * 1000 === 2009.9999999999998, so without rounding these would
+    // be sent as non-integers and rejected by the server's z.int() check.
+    expect(parseKgToGrams("2.01")).toBe(2010);
+    expect(parseKgToGrams("1.005")).toBe(1005);
+  });
+
+  it.each([
+    ["8", 8],
+    ["", null],
+    ["8.5", null],
+    ["-1", null],
+  ])("parseReps(%j) = %j", (input, expected) => {
+    expect(parseReps(input)).toBe(expected);
+  });
+
+  it("formats for display", () => {
+    expect(formatWeight(82_500)).toBe("82.5 kg");
+    expect(formatWeight(80_000)).toBe("80 kg");
+    expect(formatVolume(2_340_500)).toBe("2,341 kg");
+    expect(formatDuration(3725)).toBe("1h 2m");
+    expect(formatDuration(540)).toBe("9m");
+    expect(formatClock(754)).toBe("12:34");
+    expect(formatClock(3725)).toBe("1:02:05");
+  });
+});
+
+describe("workout draft store", () => {
+  it("starts a draft once and never overwrites one in progress", () => {
+    store().start();
+    store().setTitle("Push day");
+    store().start();
+
+    expect(draft().title).toBe("Push day");
+  });
+
+  it("adds an exercise with one empty set ready to fill in", () => {
+    store().start();
+    store().addExercise(bench);
+
+    expect(draft().exercises).toHaveLength(1);
+    expect(draft().exercises[0]!.sets).toEqual([expect.objectContaining({ reps: "", weightKg: "" })]);
+  });
+
+  it("copies the previous set's values when adding a set (but not warmup)", () => {
+    store().start();
+    store().addExercise(bench);
+    const ex = draft().exercises[0]!;
+    store().updateSet(ex.key, ex.sets[0]!.key, { reps: "8", weightKg: "80", isWarmup: true });
+
+    store().addSet(ex.key);
+
+    const [first, second] = draft().exercises[0]!.sets;
+    expect(second).toMatchObject({ reps: "8", weightKg: "80", isWarmup: false });
+    expect(second!.key).not.toBe(first!.key);
+  });
+
+  it("only touches the targeted exercise and set", () => {
+    store().start();
+    store().addExercise(bench);
+    store().addExercise(bench); // same exercise twice is allowed
+    const [a, b] = draft().exercises;
+
+    store().updateSet(a!.key, a!.sets[0]!.key, { reps: "5" });
+    store().removeExercise(b!.key);
+
+    expect(draft().exercises).toHaveLength(1);
+    expect(draft().exercises[0]!.sets[0]!.reps).toBe("5");
+  });
+
+  it("ignores edits when there is no draft (no crash after discard)", () => {
+    store().setTitle("ghost");
+    store().addExercise(bench);
+
+    expect(store().draft).toBeNull();
+  });
+});
+
+describe("draftToInput (validation + API payload)", () => {
+  const baseDraft = (exercises: WorkoutDraft["exercises"]): WorkoutDraft => ({
+    title: "  Push day  ",
+    startedAt: "2026-10-15T10:00:00.000Z",
+    exercises,
+  });
+  const set = (reps: string, weightKg: string, isWarmup = false) => ({ key: Math.random().toString(), reps, weightKg, isWarmup });
+
+  it("converts to the API shape: trimmed title, grams, numbers, endedAt", () => {
+    const result = draftToInput(
+      baseDraft([
+        { key: "1", exercise: bench, sets: [set("10", "40", true), set("8", "82,5")] },
+        { key: "2", exercise: squat, sets: [set("12", "")] }, // bodyweight-style: no weight
+      ]),
+      new Date("2026-10-15T11:00:00.000Z"),
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      input: {
+        title: "Push day",
+        startedAt: "2026-10-15T10:00:00.000Z",
+        endedAt: "2026-10-15T11:00:00.000Z",
+        exercises: [
+          {
+            exerciseId: "ex-bench",
+            sets: [
+              { reps: 10, weightGrams: 40_000, isWarmup: true },
+              { reps: 8, weightGrams: 82_500, isWarmup: false },
+            ],
+          },
+          { exerciseId: "ex-squat", sets: [{ reps: 12, isWarmup: false }] },
+        ],
+      },
+    });
+  });
+
+  it("skips completely blank rows (the extra set people often add)", () => {
+    const result = draftToInput(baseDraft([{ key: "1", exercise: bench, sets: [set("5", "100"), set("", "")] }]));
+
+    expect(result.ok && result.input.exercises[0]!.sets).toHaveLength(1);
+  });
+
+  it.each([
+    ["no exercises", baseDraft([]), "Add at least one exercise."],
+    ["a blank title", { ...baseDraft([{ key: "1", exercise: bench, sets: [set("5", "100")] }]), title: " " }, "Give your workout a name."],
+    ["weight without reps", baseDraft([{ key: "1", exercise: bench, sets: [set("", "100")] }]), "Bench Press, set 1: enter the number of reps."],
+    ["zero reps", baseDraft([{ key: "1", exercise: bench, sets: [set("0", "100")] }]), "Bench Press, set 1: enter the number of reps."],
+    ["a junk weight", baseDraft([{ key: "1", exercise: bench, sets: [set("5", "heavy")] }]), 'Bench Press, set 1: "heavy" isn\'t a valid weight.'],
+    ["an exercise with only blank rows", baseDraft([{ key: "1", exercise: squat, sets: [set("", "")] }]), "Log at least one set for Back Squat, or remove it."],
+  ])("rejects %s with a specific message", (_label, input, error) => {
+    expect(draftToInput(input)).toEqual({ ok: false, error });
+  });
+});

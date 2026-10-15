@@ -1,5 +1,6 @@
 import axios, { isAxiosError } from "axios";
 import { env } from "@/config/env";
+import { useWorkoutDraft } from "@/features/workouts/draftStore";
 import { queryClient } from "@/lib/queryClient";
 import { tokenStorage } from "@/lib/tokenStorage";
 import { useAuthStore } from "@/stores/authStore";
@@ -27,6 +28,7 @@ export async function endSession({ notifyServer = true } = {}) {
   await tokenStorage.clear();
   useAuthStore.getState().clear(); // status -> signedOut: the router guard redirects to login
   queryClient.clear();
+  useWorkoutDraft.getState().discard(); // the next person to log in mustn't inherit it
 
   if (notifyServer && refreshToken) {
     authClient.post("/auth/logout", { refreshToken }).catch(() => {
