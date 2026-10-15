@@ -1,13 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Tabs } from "expo-router";
 import { Pressable } from "react-native";
+import { TabBar } from "@/components/ui";
 import { useTheme } from "@/theme";
 
 export default function TabsLayout() {
   const { colors } = useTheme();
 
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: colors.primaryText }}>
+    <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ tabBarActiveTintColor: colors.primaryText }}>
       <Tabs.Screen
         name="index"
         options={{

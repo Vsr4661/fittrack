@@ -1,13 +1,13 @@
 import { router } from "expo-router";
-import { StyleSheet, View } from "react-native";
-import { Button } from "@/components/Button";
-import { EmptyState } from "@/components/EmptyState";
+import { View } from "react-native";
+import { Button, EmptyState } from "@/components/ui";
 import { WorkoutList } from "@/features/workouts/components/WorkoutList";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useWorkoutHistory } from "@/features/workouts/hooks";
-import { colors, spacing } from "@/theme/legacy";
+import { makeStyles } from "@/theme";
 
 export default function WorkoutHistoryScreen() {
+  const styles = useStyles();
   const history = useWorkoutHistory();
   const hasDraft = useWorkoutDraft((s) => s.draft !== null);
 
@@ -20,16 +20,16 @@ export default function WorkoutHistoryScreen() {
     <View style={styles.container}>
       <WorkoutList
         query={history}
-        empty={<EmptyState title="No workouts yet" message="Start your first workout and it will show up here." />}
+        empty={<EmptyState icon="barbell-outline" title="No workouts yet" message="Start your first workout and it will show up here." />}
       />
       <View style={styles.cta}>
-        <Button title={hasDraft ? "Resume workout" : "Start workout"} onPress={startOrResume} />
+        <Button title={hasDraft ? "Resume workout" : "Start workout"} icon={hasDraft ? "play-forward" : "play"} size="lg" onPress={startOrResume} />
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  cta: { padding: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-});
+const useStyles = makeStyles((t) => ({
+  container: { flex: 1, backgroundColor: t.colors.background },
+  cta: { padding: t.spacing.lg, borderTopWidth: 1, borderTopColor: t.colors.border, backgroundColor: t.colors.background },
+}));

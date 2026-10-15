@@ -1,13 +1,13 @@
 import { router } from "expo-router";
 import { View } from "react-native";
-import { Button } from "@/components/Button";
-import { EmptyState } from "@/components/EmptyState";
+import { EmptyState } from "@/components/ui";
 import { useFeed } from "@/features/social/hooks";
 import { WorkoutList } from "@/features/workouts/components/WorkoutList";
-import { colors } from "@/theme/legacy";
+import { useTheme } from "@/theme";
 
 export default function FeedScreen() {
   const feed = useFeed();
+  const { colors } = useTheme();
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -15,9 +15,12 @@ export default function FeedScreen() {
         query={feed}
         showAuthor
         empty={
-          <EmptyState title="Your feed is empty" message="Follow people to see their workouts here, or log your own.">
-            <Button title="Find people to follow" onPress={() => router.push("/search")} />
-          </EmptyState>
+          <EmptyState
+            icon="people-outline"
+            title="Your feed is empty"
+            message="Follow people to see their workouts here, or log your own."
+            action={{ label: "Find people to follow", onPress: () => router.push("/search") }}
+          />
         }
       />
     </View>

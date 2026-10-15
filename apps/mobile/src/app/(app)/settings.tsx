@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { useLogout } from "@/features/auth/hooks";
 import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
 import { useThemePreference, type ThemePreference } from "@/theme/themeStore";
 
@@ -14,6 +15,13 @@ export default function SettingsScreen() {
   const { colors } = useTheme();
   const preference = useThemePreference((s) => s.preference);
   const setPreference = useThemePreference((s) => s.setPreference);
+  const logout = useLogout(); // same hook the profile used; only the button moved here
+
+  const confirmLogout = () =>
+    Alert.alert("Log out?", "You'll need your email and password to log back in.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Log out", style: "destructive", onPress: () => logout.mutate() },
+    ]);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -36,6 +44,19 @@ export default function SettingsScreen() {
           );
         })}
       </View>
+
+      <Text style={[styles.sectionTitle, styles.sectionGap]}>Account</Text>
+      <View style={styles.card}>
+        <Pressable
+          onPress={confirmLogout}
+          disabled={logout.isPending}
+          style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+          accessibilityRole="button"
+        >
+          <Ionicons name="log-out-outline" size={20} color={colors.danger} />
+          <Text style={[styles.rowLabel, { color: colors.danger }]}>Log out</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -44,6 +65,7 @@ const useStyles = makeStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.colors.background },
   content: { padding: t.spacing.lg, gap: t.spacing.sm },
   sectionTitle: { ...t.typography.overline, color: t.colors.textMuted, marginLeft: t.spacing.xs },
+  sectionGap: { marginTop: t.spacing.lg },
   card: { backgroundColor: t.colors.surface, borderRadius: t.radius.lg, overflow: "hidden", ...t.shadows.sm },
   row: {
     flexDirection: "row",

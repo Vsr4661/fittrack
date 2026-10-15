@@ -11,5 +11,6 @@ export { Input } from "./Input";
 export { PressableScale } from "./PressableScale";
 export { ProgressRing } from "./ProgressRing";
 export { Skeleton, WorkoutCardSkeleton } from "./Skeleton";
+export { TabBar } from "./TabBar";
 export { toast, ToastHost } from "./Toast";
 export { useCountUp } from "./useCountUp";
