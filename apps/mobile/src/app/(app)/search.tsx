@@ -1,52 +1,61 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Avatar } from "@/components/Avatar";
-import { ErrorView } from "@/components/QueryState";
+import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { Avatar, Badge, EmptyState, ErrorState, SearchField } from "@/components/ui";
 import { useUserSearch } from "@/features/social/hooks";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
-import { colors, radius, spacing } from "@/theme/legacy";
+import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
 
 export default function SearchScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [text, setText] = useState("");
   const q = useDebouncedValue(text.trim(), 300);
   const search = useUserSearch(q);
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        value={text}
-        onChangeText={setText}
-        placeholder="Search by name or username"
-        placeholderTextColor={colors.textMuted}
-        autoFocus
-        autoCapitalize="none"
-        autoCorrect={false}
-        clearButtonMode="while-editing"
-        accessibilityLabel="Search people"
-      />
+    <View style={styles.screen}>
+      <View style={styles.searchBar}>
+        <SearchField value={text} onChangeText={setText} placeholder="Search by name or username" accessibilityLabel="Search people" autoFocus />
+      </View>
 
       {search.isError ? (
-        <ErrorView error={search.error} onRetry={() => search.refetch()} />
+        <ErrorState error={search.error} onRetry={() => search.refetch()} />
       ) : (
         <FlatList
           data={q ? (search.data ?? []) : []}
           keyExtractor={(u) => u.id}
           keyboardShouldPersistTaps="handled"
-          ListHeaderComponent={search.isFetching ? <ActivityIndicator style={styles.spinner} /> : null}
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={styles.list}
+          ListHeaderComponent={search.isFetching ? <ActivityIndicator style={styles.spinner} color={colors.textMuted} /> : null}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={
-            q && search.isSuccess && !search.isFetching ? <Text style={styles.empty}>No one found for "{q}"</Text> : null
+            !q ? (
+              <EmptyState icon="people-outline" title="Find people to follow" message="Search by name or @username to see their workouts in your feed." />
+            ) : search.isSuccess && !search.isFetching ? (
+              <EmptyState icon="search-outline" title="No one found" message={`Nobody matches "${q}". Check the spelling or try a different name.`} />
+            ) : null
           }
           renderItem={({ item }) => (
             <Link href={`/user/${item.username}`} asChild>
-              <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]} accessibilityRole="link">
-                <Avatar name={item.displayName} userId={item.id} />
+              <Pressable
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                accessibilityRole="link"
+                accessibilityLabel={`${item.displayName}, @${item.username}${item.isFollowing ? ", following" : ""}`}
+              >
+                <Avatar name={item.displayName} userId={item.id} size={44} />
                 <View style={styles.text}>
-                  <Text style={styles.name}>{item.displayName}</Text>
-                  <Text style={styles.username}>@{item.username}</Text>
+                  <Text style={styles.name} numberOfLines={1}>
+                    {item.displayName}
+                  </Text>
+                  <Text style={styles.username} numberOfLines={1}>
+                    @{item.username}
+                  </Text>
                 </View>
-                {item.isFollowing ? <Text style={styles.badge}>Following</Text> : null}
+                {item.isFollowing ? <Badge label="Following" icon="checkmark" /> : null}
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>
             </Link>
           )}
@@ -56,23 +65,15 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  input: {
-    margin: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: colors.text,
-  },
-  spinner: { padding: spacing.sm },
-  empty: { textAlign: "center", color: colors.textMuted, padding: spacing.lg },
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  pressed: { backgroundColor: colors.surface },
+const useStyles = makeStyles((t) => ({
+  screen: { flex: 1, backgroundColor: t.colors.background },
+  searchBar: { padding: t.spacing.lg, paddingBottom: t.spacing.sm },
+  list: { paddingHorizontal: t.spacing.lg, paddingBottom: t.spacing.xxl, flexGrow: 1 },
+  spinner: { padding: t.spacing.md },
+  row: { flexDirection: "row", alignItems: "center", gap: t.spacing.md, minHeight: MIN_TOUCH + 16, paddingVertical: t.spacing.sm, borderRadius: t.radius.md },
+  pressed: { opacity: 0.6 },
   text: { flex: 1 },
-  name: { fontSize: 16, fontWeight: "600", color: colors.text },
-  username: { fontSize: 14, color: colors.textMuted },
-  badge: { fontSize: 13, color: colors.textMuted },
-});
+  name: { ...t.typography.bodyStrong, color: t.colors.text },
+  username: { ...t.typography.caption, color: t.colors.textMuted },
+  separator: { height: 1, backgroundColor: t.colors.border, marginLeft: 44 + t.spacing.md },
+}));

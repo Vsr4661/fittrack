@@ -4,8 +4,11 @@
 // Contrast (WCAG AA) was measured, not eyeballed:
 //   white on brand #FF5A1F       = 3.12:1  -> OK for icons/rings (3:1), NOT for text
 //   white on primary #D63F0A     = 4.59:1  -> buttons with white labels
-//   primaryText #D63F0A on white = 4.59:1;  #FF7A45 on dark bg = 7.42:1
-//   textMuted #64748B on white   = 4.76:1;  #94A3B8 on dark card = 6.66:1
+//   Text tokens are measured on EVERY light surface they sit on (white card,
+//   page bg #F8FAFC, muted tile #F1F5F9, primarySoft), not just white:
+//   primaryText #C93A08 >= 4.52:1;  textMuted #5B6B7F >= 4.80:1
+//   (the earlier #D63F0A / #64748B passed on white but failed on page bg/tiles)
+//   Dark: primaryText #FF7A45 on dark bg = 7.42:1; textMuted #94A3B8 on card = 6.66:1
 //   Text on tinted badge/button backgrounds needs darker shades in light mode:
 //   success #166534 5.56:1, warning #92400E 5.50:1, danger #B91C1C 5.30:1,
 //   onPrimarySoft #B83508 5.21:1 (the 500/600 shades measured 1.9–4.0:1: fail)
@@ -19,7 +22,7 @@ const palette = {
   slate850: "#161C27",
   slate800: "#1F2937",
   slate700: "#334155",
-  slate500: "#64748B",
+  slate550: "#5B6B7F", // muted text that passes on every light surface
   slate400: "#94A3B8",
   slate200: "#E2E8F0",
   slate100: "#F1F5F9",
@@ -63,11 +66,11 @@ export const lightColors: ColorTokens = {
   surfaceMuted: palette.slate100,
   border: palette.slate200,
   text: palette.slate900,
-  textMuted: palette.slate500,
+  textMuted: palette.slate550,
   textInverse: palette.white,
   brand: palette.orange500,
   primary: palette.orange600,
-  primaryText: palette.orange600,
+  primaryText: "#C93A08", // darker than the fill so small orange text passes everywhere
   onPrimary: palette.white,
   primarySoft: "#FFEDE5",
   onPrimarySoft: "#B83508",

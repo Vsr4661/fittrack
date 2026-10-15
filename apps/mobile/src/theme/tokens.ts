@@ -53,6 +53,15 @@ export const textScale = {
   display: 1.6,
 } as const;
 
+// ─── Brand gradient ────────────────────────────────────
+// Deep end of the brand orange, shared by the auth hero and profile cover.
+// Solid white text on it measures 4.59:1 (top) to 7.67:1 (bottom); the bright
+// brand orange appears only as a decorative accent shape on top.
+export const gradients = {
+  hero: ["#D63F0A", "#B83508", "#9A2C06"] as const,
+  heroAccent: "#FF5A1F",
+};
+
 // ─── Shadows ───────────────────────────────────────────
 // iOS uses shadow* props, Android uses elevation. Dark mode relies on lighter
 // surfaces for depth instead (shadows are invisible on near-black).

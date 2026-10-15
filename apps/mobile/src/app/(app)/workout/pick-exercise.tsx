@@ -1,11 +1,13 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { ErrorView, LoadingView } from "@/components/QueryState";
+import { FlatList, Pressable, Text, View } from "react-native";
+import { Badge, EmptyState, ErrorState, SearchField, Skeleton } from "@/components/ui";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useExercises } from "@/features/workouts/hooks";
 import type { MuscleGroup } from "@/features/workouts/types";
-import { colors, radius, spacing } from "@/theme/legacy";
+import { haptics } from "@/lib/haptics";
+import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
 
 const muscleLabel: Record<MuscleGroup, string> = {
   CHEST: "Chest",
@@ -19,6 +21,8 @@ const muscleLabel: Record<MuscleGroup, string> = {
 };
 
 export default function PickExerciseScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const exercises = useExercises();
   const [search, setSearch] = useState("");
 
@@ -30,60 +34,67 @@ export default function PickExerciseScreen() {
       .filter((e) => q === "" || e.name.toLowerCase().includes(q));
   }, [exercises.data, search]);
 
-  if (exercises.isPending) return <LoadingView />;
-  if (exercises.isError) return <ErrorView error={exercises.error} onRetry={() => exercises.refetch()} />;
+  if (exercises.isError) return <ErrorState error={exercises.error} onRetry={() => exercises.refetch()} />;
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.search}
-        value={search}
-        onChangeText={setSearch}
-        placeholder="Search exercises"
-        placeholderTextColor={colors.textMuted}
-        autoCorrect={false}
-        clearButtonMode="while-editing"
-        accessibilityLabel="Search exercises"
-      />
-      <FlatList
-        data={filtered}
-        keyExtractor={(e) => e.id}
-        keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => (
-          <Pressable
-            style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-            onPress={() => {
-              useWorkoutDraft.getState().addExercise({ id: item.id, name: item.name, muscleGroup: item.muscleGroup });
-              router.back();
-            }}
-            accessibilityRole="button"
-          >
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.meta}>{muscleLabel[item.muscleGroup]}</Text>
-          </Pressable>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={<Text style={styles.emptyText}>No exercises match "{search}"</Text>}
-      />
+    <View style={styles.screen}>
+      <View style={styles.searchBar}>
+        <SearchField value={search} onChangeText={setSearch} placeholder="Search exercises" accessibilityLabel="Search exercises" />
+      </View>
+
+      {exercises.isPending ? (
+        <View style={styles.list}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <View key={i} style={styles.row}>
+              <View style={styles.text}>
+                <Skeleton width="55%" height={16} />
+              </View>
+              <Skeleton width={64} height={20} radius={999} />
+            </View>
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(e) => e.id}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={styles.list}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          renderItem={({ item }) => (
+            <Pressable
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              onPress={() => {
+                haptics.selection();
+                useWorkoutDraft.getState().addExercise({ id: item.id, name: item.name, muscleGroup: item.muscleGroup });
+                router.back();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={`Add ${item.name}, ${muscleLabel[item.muscleGroup]}`}
+            >
+              <Text style={[styles.name, styles.text]} numberOfLines={2}>
+                {item.name}
+              </Text>
+              <Badge label={muscleLabel[item.muscleGroup]} />
+              <Ionicons name="add-circle-outline" size={22} color={colors.primaryText} />
+            </Pressable>
+          )}
+          ListEmptyComponent={
+            <EmptyState icon="search-outline" title="No exercises found" message={`Nothing matches "${search.trim()}". Try a shorter search, like "press" or "row".`} />
+          }
+        />
+      )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  search: {
-    margin: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: colors.text,
-  },
-  row: { paddingHorizontal: spacing.md, paddingVertical: 14 },
-  pressed: { backgroundColor: colors.surface },
-  name: { fontSize: 16, fontWeight: "600", color: colors.text },
-  meta: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: spacing.md },
-  emptyText: { textAlign: "center", color: colors.textMuted, padding: spacing.lg },
-});
+const useStyles = makeStyles((t) => ({
+  screen: { flex: 1, backgroundColor: t.colors.background },
+  searchBar: { padding: t.spacing.lg, paddingBottom: t.spacing.sm },
+  list: { paddingHorizontal: t.spacing.lg, paddingBottom: t.spacing.xxl, flexGrow: 1 },
+  row: { flexDirection: "row", alignItems: "center", gap: t.spacing.md, minHeight: MIN_TOUCH + 12, paddingVertical: t.spacing.sm },
+  pressed: { opacity: 0.6 },
+  text: { flex: 1 },
+  name: { ...t.typography.bodyStrong, color: t.colors.text },
+  separator: { height: 1, backgroundColor: t.colors.border },
+}));

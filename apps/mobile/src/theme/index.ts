@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { StyleSheet, useColorScheme } from "react-native";
 import { darkColors, lightColors, type ColorTokens } from "./colors";
 import { useThemePreference } from "./themeStore";
-import { fonts, MIN_TOUCH, radius, shadows, spacing, textScale, typography } from "./tokens";
+import { fonts, gradients, MIN_TOUCH, radius, shadows, spacing, textScale, typography } from "./tokens";
 
-export { fonts, MIN_TOUCH, radius, shadows, spacing, textScale, typography };
+export { fonts, gradients, MIN_TOUCH, radius, shadows, spacing, textScale, typography };
 export type { ColorTokens };
 
 export interface Theme {

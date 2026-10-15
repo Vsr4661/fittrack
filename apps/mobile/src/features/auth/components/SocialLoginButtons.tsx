@@ -35,10 +35,7 @@ export function SocialLoginButtons() {
         >
           <Ionicons name={p.icon} size={20} color={colors.textMuted} />
           <Text style={styles.label}>{p.label}</Text>
-          {/* Wrapper: Badge pins itself to the top (alignSelf), the row centers this */}
-          <View>
-            <Badge label="Soon" />
-          </View>
+          <Badge label="Soon" />
         </View>
       ))}
     </View>

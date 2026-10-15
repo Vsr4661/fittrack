@@ -24,7 +24,8 @@ const useStyles = makeStyles((t) => ({
     flexDirection: "row",
     alignItems: "center",
     gap: t.spacing.xs,
-    alignSelf: "flex-start",
+    // No alignSelf here: a badge pinning itself to "flex-start" mis-centered it
+    // in every row layout. Column parents choose alignment (alignItems) instead.
     paddingHorizontal: t.spacing.sm,
     paddingVertical: t.spacing.xxs + 1,
     borderRadius: t.radius.pill,

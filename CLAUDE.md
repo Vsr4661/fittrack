@@ -84,7 +84,8 @@ npm run typecheck -w apps/mobile
 - Styles come from `@/theme` via `makeStyles((t) => ...)`; use semantic color roles
   (`surface`, `textMuted`, `primaryText`), never hex values. White text only on
   `primary` (#D63F0A, 4.59:1); the brighter `brand` orange is for graphics only.
-- `@/theme/legacy` is a temporary shim for not-yet-redesigned files; don't add new imports of it.
+- Text colors are measured on EVERY surface they sit on (card, page bg, muted tile),
+  not just white; the redesign shipped two tokens that passed on white only.
 
 ## Pinned versions / known issues — don't "fix" without checking
 

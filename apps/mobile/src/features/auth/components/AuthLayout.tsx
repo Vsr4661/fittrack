@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { makeStyles } from "@/theme";
+import { gradients, makeStyles } from "@/theme";
 
 interface AuthLayoutProps {
   title: string;
@@ -14,10 +14,7 @@ interface AuthLayoutProps {
   footer?: ReactNode;
 }
 
-// Deep end of the brand orange: white text measures 4.59:1 (top) to 7.67:1
-// (bottom). The bright #FF5A1F would only reach 3.12:1, so it's used for the
-// decorative shapes only. Hero text is always solid white (faded white = 3.74:1).
-const HERO_GRADIENT = ["#D63F0A", "#B83508", "#9A2C06"] as const;
+// Hero text is always solid white on gradients.hero (faded white = 3.74:1).
 
 /**
  * Shared shell for login/register: a gradient hero with the brand, and a form
@@ -36,7 +33,7 @@ export function AuthLayout({ title, subtitle, hero = "tall", children, footer }:
         bounces={false}
       >
         <LinearGradient
-          colors={HERO_GRADIENT}
+          colors={gradients.hero}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.hero, { paddingTop: insets.top + (hero === "tall" ? 48 : 20) }, hero === "compact" && styles.heroCompact]}
@@ -84,7 +81,7 @@ const useStyles = makeStyles((t) => ({
     overflow: "hidden",
   },
   heroCompact: { paddingBottom: t.spacing.xxxl + t.spacing.sm },
-  blob: { position: "absolute", borderRadius: 999, backgroundColor: "#FF5A1F", opacity: 0.35 },
+  blob: { position: "absolute", borderRadius: 999, backgroundColor: gradients.heroAccent, opacity: 0.35 },
   blobTop: { width: 220, height: 220, top: -80, right: -60 },
   blobBottom: { width: 160, height: 160, bottom: -40, left: -50 },
   logo: {

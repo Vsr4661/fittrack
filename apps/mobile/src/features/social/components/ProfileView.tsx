@@ -3,12 +3,10 @@ import { router } from "expo-router";
 import { Text, View } from "react-native";
 import { Avatar, Button, EmptyState, ErrorState, Skeleton, useCountUp } from "@/components/ui";
 import { WorkoutList } from "@/features/workouts/components/WorkoutList";
-import { makeStyles, useTheme } from "@/theme";
+import { gradients, makeStyles, useTheme } from "@/theme";
 import { useProfile, useToggleFollow, useUserWorkouts } from "../hooks";
 import type { Profile } from "../types";
 
-// Same deep-orange gradient as the auth hero: white-safe, on-brand
-const COVER_GRADIENT = ["#D63F0A", "#B83508", "#9A2C06"] as const;
 const AVATAR_SIZE = 96;
 
 /** One screen for both my profile and other people's; `isMe` decides the actions. */
@@ -42,7 +40,7 @@ function ProfileHeader({ profile }: { profile: Profile }) {
   return (
     <View style={styles.header}>
       {/* Full-bleed cover: negative margins cancel the list's side padding */}
-      <LinearGradient colors={COVER_GRADIENT} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
+      <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cover}>
         <View style={styles.blob} />
       </LinearGradient>
 
@@ -123,7 +121,7 @@ const useStyles = makeStyles((t) => ({
     marginTop: -t.spacing.lg,
     overflow: "hidden",
   },
-  blob: { position: "absolute", width: 200, height: 200, borderRadius: 100, backgroundColor: "#FF5A1F", opacity: 0.35, top: -70, right: -40 },
+  blob: { position: "absolute", width: 200, height: 200, borderRadius: 100, backgroundColor: gradients.heroAccent, opacity: 0.35, top: -70, right: -40 },
   identity: { alignItems: "center", gap: t.spacing.xs, marginTop: -(AVATAR_SIZE / 2) - t.spacing.lg },
   name: { ...t.typography.title, color: t.colors.text, marginTop: t.spacing.sm, textAlign: "center" },
   username: { ...t.typography.body, color: t.colors.textMuted },

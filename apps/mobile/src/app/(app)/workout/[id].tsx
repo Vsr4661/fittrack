@@ -1,30 +1,38 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { KeyboardScreen } from "@/components/ui";
-import { ErrorView, LoadingView } from "@/components/QueryState";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Badge, Card, ErrorState, KeyboardScreen, Skeleton, toast } from "@/components/ui";
 import { useMe } from "@/features/auth/hooks";
 import { AuthorRow } from "@/features/social/components/AuthorRow";
 import { CommentsSection } from "@/features/social/components/CommentsSection";
 import { LikeButton } from "@/features/social/components/LikeButton";
 import { formatDuration, formatVolume, formatWeight, formatWorkoutDate } from "@/features/workouts/format";
 import { useDeleteWorkout, useWorkout } from "@/features/workouts/hooks";
-import type { WorkoutSet } from "@/features/workouts/types";
+import type { Visibility, WorkoutSet } from "@/features/workouts/types";
 import { toApiError } from "@/lib/apiError";
-import { colors, radius, spacing } from "@/theme/legacy";
+import { makeStyles, MIN_TOUCH, useTheme } from "@/theme";
+
+const visibilityBadge: Record<Visibility, { label: string; icon: "globe-outline" | "people-outline" | "lock-closed-outline" }> = {
+  PUBLIC: { label: "Everyone", icon: "globe-outline" },
+  FOLLOWERS: { label: "Followers", icon: "people-outline" },
+  PRIVATE: { label: "Only me", icon: "lock-closed-outline" },
+};
 
 export default function WorkoutDetailScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const workout = useWorkout(id);
   const me = useMe();
   const deleteWorkout = useDeleteWorkout();
 
-  if (workout.isPending) return <LoadingView />;
-  if (workout.isError) return <ErrorView error={workout.error} onRetry={() => workout.refetch()} />;
+  if (workout.isPending) return <DetailSkeleton />;
+  if (workout.isError) return <ErrorState error={workout.error} onRetry={() => workout.refetch()} />;
 
   const w = workout.data;
   const isOwner = me.data?.id === w.userId;
 
+  // Unchanged flow; success/failure feedback now via toast
   const confirmDelete = () =>
     Alert.alert("Delete workout?", "This can't be undone.", [
       { text: "Cancel", style: "cancel" },
@@ -33,19 +41,24 @@ export default function WorkoutDetailScreen() {
         style: "destructive",
         onPress: () =>
           deleteWorkout.mutate(w.id, {
-            onSuccess: () => router.back(),
-            onError: (err) => Alert.alert("Couldn't delete", toApiError(err).message),
+            onSuccess: () => {
+              toast.success("Workout deleted");
+              router.back();
+            },
+            onError: (err) => toast.error(toApiError(err).message),
           }),
       },
     ]);
 
+  const vis = visibilityBadge[w.visibility];
+
   return (
-    <KeyboardScreen style={styles.flex}>
+    <KeyboardScreen style={styles.screen}>
       <Stack.Screen
         options={{
           headerRight: isOwner
             ? () => (
-                <Pressable onPress={confirmDelete} hitSlop={8} accessibilityLabel="Delete workout">
+                <Pressable onPress={confirmDelete} hitSlop={8} style={styles.headerButton} accessibilityRole="button" accessibilityLabel="Delete workout">
                   <Ionicons name="trash-outline" size={22} color={colors.danger} />
                 </Pressable>
               )
@@ -54,25 +67,42 @@ export default function WorkoutDetailScreen() {
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AuthorRow author={w.author} subtitle={formatWorkoutDate(w.startedAt)} />
-        <Text style={styles.title}>{w.title}</Text>
 
-        <View style={styles.stats}>
-          {w.stats.durationSec !== null ? <Stat label="Duration" value={formatDuration(w.stats.durationSec)} /> : null}
-          <Stat label="Volume" value={formatVolume(w.stats.totalVolumeGrams)} />
-          <Stat label="Sets" value={String(w.stats.setCount)} />
+        <View style={styles.titleBlock}>
+          <Text style={styles.title} accessibilityRole="header">
+            {w.title}
+          </Text>
+          {/* Privacy is always visible (product principle 3) */}
+          <Badge label={vis.label} icon={vis.icon} />
         </View>
 
-        {w.exercises.map((entry) => (
-          <View key={entry.id} style={styles.exercise}>
-            <Text style={styles.exerciseName}>{entry.exercise.name}</Text>
-            {entry.sets.map((set) => (
-              <View key={set.id} style={styles.setRow}>
-                <Text style={[styles.setNumber, set.isWarmup && styles.warmup]}>{set.isWarmup ? "W" : set.setNumber}</Text>
-                <Text style={styles.setText}>{describeSet(set)}</Text>
+        <View style={styles.stats}>
+          {w.stats.durationSec !== null ? <Stat icon="time-outline" label="Duration" value={formatDuration(w.stats.durationSec)} /> : null}
+          <Stat icon="barbell-outline" label="Volume" value={formatVolume(w.stats.totalVolumeGrams)} />
+          <Stat icon="layers-outline" label="Sets" value={String(w.stats.setCount)} />
+        </View>
+
+        {w.exercises.map((entry) => {
+          let working = 0; // working-set numbering skips warmups, like the logger
+          return (
+            <Card key={entry.id}>
+              <Text style={styles.exerciseName}>{entry.exercise.name}</Text>
+              <View style={styles.sets}>
+                {entry.sets.map((set) => {
+                  if (!set.isWarmup) working++;
+                  return (
+                    <View key={set.id} style={styles.setRow} accessible accessibilityLabel={`${set.isWarmup ? "Warmup set" : `Set ${working}`}: ${describeSet(set)}`}>
+                      <View style={[styles.setBadge, set.isWarmup && styles.setBadgeWarmup]}>
+                        <Text style={[styles.setBadgeText, set.isWarmup && styles.setBadgeTextWarmup]}>{set.isWarmup ? "W" : working}</Text>
+                      </View>
+                      <Text style={styles.setText}>{describeSet(set)}</Text>
+                    </View>
+                  );
+                })}
               </View>
-            ))}
-          </View>
-        ))}
+            </Card>
+          );
+        })}
 
         <View style={styles.likeRow}>
           <LikeButton workoutId={w.id} social={w.social} />
@@ -91,28 +121,70 @@ function describeSet(set: WorkoutSet): string {
   return "—";
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
-    <View style={styles.stat}>
+    <View style={styles.stat} accessible accessibilityLabel={`${label}: ${value}`}>
+      <Ionicons name={icon} size={16} color={colors.textMuted} />
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, gap: spacing.md },
-  title: { fontSize: 26, fontWeight: "800", color: colors.text },
-  stats: { flexDirection: "row", gap: spacing.sm },
-  stat: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, alignItems: "center" },
-  statValue: { fontSize: 18, fontWeight: "700", color: colors.text },
-  statLabel: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  exercise: { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, gap: spacing.sm },
-  exerciseName: { fontSize: 17, fontWeight: "700", color: colors.primary },
-  setRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  setNumber: { width: 24, textAlign: "center", fontWeight: "700", color: colors.textMuted },
-  warmup: { color: "#B45309" },
-  setText: { fontSize: 16, color: colors.text, fontVariant: ["tabular-nums"] },
-  likeRow: { flexDirection: "row", paddingVertical: spacing.xs },
-});
+function DetailSkeleton() {
+  const styles = useStyles();
+  return (
+    <View style={[styles.screen, styles.content]} accessibilityRole="progressbar" accessibilityLabel="Loading workout">
+      <View style={styles.setRow}>
+        <Skeleton circle height={36} />
+        <Skeleton width={140} height={14} />
+      </View>
+      <Skeleton width="70%" height={26} />
+      <View style={styles.stats}>
+        <Skeleton height={72} width="31%" radius={16} />
+        <Skeleton height={72} width="31%" radius={16} />
+        <Skeleton height={72} width="31%" radius={16} />
+      </View>
+      <Skeleton height={140} radius={16} />
+    </View>
+  );
+}
+
+const useStyles = makeStyles((t) => ({
+  screen: { flex: 1, backgroundColor: t.colors.background },
+  content: { padding: t.spacing.lg, gap: t.spacing.lg, paddingBottom: t.spacing.xxl },
+  headerButton: { minWidth: MIN_TOUCH, minHeight: MIN_TOUCH, alignItems: "center", justifyContent: "center" },
+  titleBlock: { gap: t.spacing.sm, alignItems: "flex-start" }, // badge hugs its label
+  title: { ...t.typography.title, fontSize: 28, lineHeight: 34, color: t.colors.text },
+  stats: { flexDirection: "row", gap: t.spacing.sm },
+  stat: {
+    flex: 1,
+    alignItems: "center",
+    gap: t.spacing.xxs,
+    paddingVertical: t.spacing.md,
+    borderRadius: t.radius.lg,
+    backgroundColor: t.colors.surface,
+    ...t.shadows.sm,
+    ...(t.scheme === "dark" ? { borderWidth: 1, borderColor: t.colors.border } : null),
+  },
+  statValue: { ...t.typography.number, color: t.colors.text },
+  statLabel: { ...t.typography.caption, color: t.colors.textMuted },
+  exerciseName: { ...t.typography.heading, color: t.colors.text },
+  sets: { gap: t.spacing.sm },
+  setRow: { flexDirection: "row", alignItems: "center", gap: t.spacing.md },
+  setBadge: {
+    minWidth: 32,
+    minHeight: 32,
+    borderRadius: t.radius.sm,
+    backgroundColor: t.colors.surfaceMuted,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  setBadgeWarmup: { backgroundColor: t.colors.warningSoft },
+  setBadgeText: { ...t.typography.label, color: t.colors.text },
+  setBadgeTextWarmup: { color: t.colors.warning },
+  setText: { ...t.typography.number, fontSize: 17, color: t.colors.text },
+  likeRow: { flexDirection: "row" },
+}));
