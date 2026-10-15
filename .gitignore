@@ -5,3 +5,10 @@ dist/
 .expo/
 coverage/
 apps/server/src/generated/
+
+# impeccable (third-party design skill): local dev tooling with a 16 MB
+# platform binary; reinstall with `npx impeccable install`, never commit it
+.claude/skills/impeccable/
+.claude/agents/impeccable-*
+.github/skills/impeccable/
+.github/agents/impeccable-*
