@@ -29,4 +29,7 @@ export const socialApi = {
   search: async (q: string) => (await api.get<{ users: UserSearchResult[] }>("/users/search", { params: { q } })).data.users,
   updateMe: async (data: { displayName?: string; bio?: string }) =>
     (await api.patch<{ user: User }>("/users/me", data)).data.user,
+  /** `key` comes from an AVATAR upload (features/uploads). */
+  setAvatar: async (key: string) => (await api.put<{ user: User }>("/users/me/avatar", { key })).data.user,
+  removeAvatar: async () => (await api.delete<{ user: User }>("/users/me/avatar")).data.user,
 };

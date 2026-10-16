@@ -6,10 +6,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Card, EmptyState, KeyboardScreen, toast } from "@/components/ui";
 import { ElapsedTime } from "@/features/workouts/components/ElapsedTime";
 import { ExerciseCard } from "@/features/workouts/components/ExerciseCard";
+import { PhotoStrip } from "@/features/workouts/components/PhotoStrip";
 import { RestTimer } from "@/features/workouts/components/RestTimer";
 import { VisibilityPicker } from "@/features/workouts/components/VisibilityPicker";
 import { draftToInput, useWorkoutDraft } from "@/features/workouts/draftStore";
 import { useCreateWorkout } from "@/features/workouts/hooks";
+import { pendingPhotoState, resumePendingUploads, startPhotoUpload } from "@/features/workouts/photoUploads";
 import { useRestTimer } from "@/features/workouts/restTimer";
 import { toApiError } from "@/lib/apiError";
 import { makeStyles, MIN_TOUCH, textScale, useTheme } from "@/theme";
@@ -25,6 +27,7 @@ export default function NewWorkoutScreen() {
   // Covers deep links / reloads straight into this screen
   useEffect(() => {
     useWorkoutDraft.getState().start();
+    resumePendingUploads(); // photos picked before the app was closed
   }, []);
 
   if (!draft) return null;
@@ -32,9 +35,36 @@ export default function NewWorkoutScreen() {
   const totalSets = draft.exercises.reduce((n, e) => n + e.sets.length, 0);
   const doneSets = draft.exercises.reduce((n, e) => n + e.sets.filter((s) => s.done).length, 0);
 
-  // ── Unchanged flow (only the feedback is now a toast instead of an alert) ──
+  // ── Save flow: wait for photo uploads, validate, then create ──
   const finish = () => {
-    const result = draftToInput(draft);
+    // Photos first: a key only exists once its upload is done
+    const photos = pendingPhotoState(draft.photos);
+    if (photos.uploading > 0) {
+      toast.info("Photos are still uploading. One moment…");
+      return;
+    }
+    if (photos.failed.length > 0) {
+      const n = photos.failed.length;
+      Alert.alert(n === 1 ? "A photo didn't upload" : `${n} photos didn't upload`, "Check your connection and try again, or save the workout without them.", [
+        { text: "Retry", onPress: () => photos.failed.forEach((p) => void startPhotoUpload(p)) },
+        {
+          text: "Save without",
+          style: "destructive",
+          onPress: () => {
+            photos.failed.forEach((p) => actions.removePhoto(p.id));
+            // Re-read the draft: the one this render closed over still has the failed photos
+            const updated = useWorkoutDraft.getState().draft;
+            if (updated) save(updated);
+          },
+        },
+      ]);
+      return;
+    }
+    save(draft);
+  };
+
+  const save = (current: typeof draft) => {
+    const result = draftToInput(current);
     if (!result.ok) {
       toast.error(result.error);
       return;
@@ -127,6 +157,7 @@ export default function NewWorkoutScreen() {
             <Button title="Add exercise" icon="add-circle-outline" variant="secondary" onPress={() => router.push("/workout/pick-exercise")} />
           </>
         )}
+        <PhotoStrip photos={draft.photos} />
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>

@@ -9,6 +9,7 @@ import { useWorkoutRoom } from "@/features/realtime/useWorkoutRoom";
 import { NewRecordBanner, useNewRecords } from "@/features/stats/components/NewRecordBanner";
 import { LikeButton } from "@/features/social/components/LikeButton";
 import { formatClock, formatDistance, formatDuration, formatWeight, formatWorkoutDate, loadStat } from "@/features/workouts/format";
+import { PhotoGallery } from "@/features/workouts/components/PhotoGallery";
 import { useDeleteWorkout, useWorkout } from "@/features/workouts/hooks";
 import type { Visibility, WorkoutSet } from "@/features/workouts/types";
 import { toApiError } from "@/lib/apiError";
@@ -80,6 +81,8 @@ export default function WorkoutDetailScreen() {
           {/* Privacy is always visible (product principle 3) */}
           <Badge label={vis.label} icon={vis.icon} />
         </View>
+
+        <PhotoGallery photos={w.photos} />
 
         <View style={styles.stats}>
           {w.stats.durationSec !== null ? <Stat icon="time-outline" label="Duration" value={formatDuration(w.stats.durationSec)} /> : null}

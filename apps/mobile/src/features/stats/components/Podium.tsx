@@ -49,7 +49,7 @@ function Step({ entry, slot, metric }: { entry: LeaderboardEntry; slot: number; 
       accessibilityLabel={`Rank ${entry.rank}: ${entry.isMe ? "you" : entry.user.displayName}, ${value}`}
     >
       {isCenter ? <Ionicons name="trophy" size={22} color={colors.brand} style={styles.crown} /> : null}
-      <Avatar name={entry.user.displayName} userId={entry.user.id} size={isCenter ? 64 : 52} ring={entry.isMe ? colors.brand : undefined} />
+      <Avatar name={entry.user.displayName} userId={entry.user.id} uri={entry.user.avatarUrl} size={isCenter ? 64 : 52} ring={entry.isMe ? colors.brand : undefined} />
       <Text style={[styles.name, entry.isMe && styles.nameMe]} numberOfLines={1}>
         {entry.isMe ? "You" : entry.user.displayName.split(" ")[0]}
       </Text>

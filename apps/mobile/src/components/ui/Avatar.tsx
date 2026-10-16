@@ -1,3 +1,5 @@
+import { Image } from "expo-image";
+import { useState } from "react";
 import { Text, View } from "react-native";
 import { fonts } from "@/theme";
 
@@ -11,10 +13,13 @@ interface AvatarProps {
   size?: number;
   /** Adds a ring (e.g. to separate an avatar overlapping a cover image). */
   ring?: string;
+  /** The profile photo. Initials show while there is none, or if it fails to load. */
+  uri?: string | null;
 }
 
-/** Initials on a colored circle. Photos replace this in the S3 upload phase. */
-export function Avatar({ name, userId, size = 40, ring }: AvatarProps) {
+/** A profile photo in a circle, falling back to initials on the person's color. */
+export function Avatar({ name, userId, size = 40, ring, uri }: AvatarProps) {
+  const [failedUri, setFailedUri] = useState<string | null>(null);
   const hash = [...userId].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
   const initials = name
     .split(/\s+/)
@@ -43,6 +48,18 @@ export function Avatar({ name, userId, size = 40, ring }: AvatarProps) {
       <Text style={{ color: "#FFFFFF", fontFamily: fonts.bold, fontSize: size * 0.38 }} allowFontScaling={false}>
         {initials || "?"}
       </Text>
+      {/* On top of the initials, so they show through while it loads or if it fails.
+          The avatar URL is stable (a redirect to storage), so it caches by URL. */}
+      {uri && uri !== failedUri ? (
+        <Image
+          source={{ uri }}
+          style={{ position: "absolute", width: "100%", height: "100%", borderRadius: size / 2 }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          onError={() => setFailedUri(uri)}
+          accessibilityIgnoresInvertColors
+        />
+      ) : null}
     </View>
   );
 }

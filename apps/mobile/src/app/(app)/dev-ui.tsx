@@ -1,3 +1,4 @@
+import { File, Paths } from "expo-file-system";
 import { Redirect, router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -14,7 +15,9 @@ import {
   toast,
   WorkoutCardSkeleton,
 } from "@/components/ui";
+import { prepareImage } from "@/features/uploads/uploadImage";
 import { useWorkoutDraft } from "@/features/workouts/draftStore";
+import { startPhotoUpload } from "@/features/workouts/photoUploads";
 import { useExercises } from "@/features/workouts/hooks";
 import { useRestTimer } from "@/features/workouts/restTimer";
 import { makeStyles } from "@/theme";
@@ -42,7 +45,9 @@ function Gallery() {
     preview?: "login" | "register";
     /** "1" = screenshot mode for previews: no dev header, no banner (README images) */
     shot?: "1";
-    seed?: "workout" | "cardio";
+    seed?: "workout" | "cardio" | "photo";
+    /** seed=photo: an image URL the simulator can reach */
+    from?: string;
   }>();
   const exercises = useExercises();
   const [chip, setChip] = useState("All");
@@ -104,6 +109,21 @@ function Gallery() {
     d.updateSet(r.key, r2.key, { distanceKm: "5.2", duration: "28:30", isWarmup: false, done: false });
     router.replace("/workout/new");
   }, [params.seed, exercises.data]);
+
+  // seed=photo&from=<url>: runs the REAL photo pipeline (resize/re-encode ->
+  // upload link -> PUT to storage) on a downloaded image, because the simulator
+  // can't be tapped through the system photo picker. Dev only.
+  useEffect(() => {
+    if (params.seed !== "photo" || !params.from) return;
+    (async () => {
+      const file = await File.downloadFileAsync(params.from!, new File(Paths.cache, `seed-${Date.now()}.jpg`));
+      const uri = await prepareImage({ uri: file.uri, width: 1600, height: 1600 }, "WORKOUT_PHOTO");
+      useWorkoutDraft.getState().start();
+      const [photo] = useWorkoutDraft.getState().addPhotos([uri]);
+      if (photo) void startPhotoUpload(photo);
+      router.replace("/workout/new");
+    })().catch((err: unknown) => toast.error(`seed=photo failed: ${String(err)}`));
+  }, [params.seed, params.from]);
 
   // Render auth screens while signed in, for screenshots without logging the
   // developer out. The login <-> register links can't open from here: those

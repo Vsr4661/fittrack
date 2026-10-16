@@ -46,7 +46,7 @@ export default function SearchScreen() {
               accessibilityRole="link"
               accessibilityLabel={`${item.displayName}, @${item.username}${item.isFollowing ? ", following" : ""}`}
             >
-              <Avatar name={item.displayName} userId={item.id} size={44} />
+              <Avatar name={item.displayName} userId={item.id} uri={item.avatarUrl} size={44} />
               <View style={styles.text}>
                 <Text style={styles.name} numberOfLines={1}>
                   {item.displayName}

@@ -27,11 +27,22 @@ export interface DraftExercise {
   sets: DraftSet[];
 }
 
+/** A photo picked for this workout. `key` is set once its upload finished. */
+export interface DraftPhoto {
+  id: string;
+  /** The resized local copy (in the app's cache), shown while logging. */
+  uri: string;
+  key: string | null;
+}
+
+export const MAX_PHOTOS = 4; // same limit as the server
+
 export interface WorkoutDraft {
   title: string;
   visibility: Visibility;
   startedAt: string;
   exercises: DraftExercise[];
+  photos: DraftPhoto[];
 }
 
 interface DraftState {
@@ -44,6 +55,10 @@ interface DraftState {
   addSet: (exerciseKey: string) => void;
   updateSet: (exerciseKey: string, setKey: string, patch: Partial<Omit<DraftSet, "key">>) => void;
   removeSet: (exerciseKey: string, setKey: string) => void;
+  /** Returns the new photos, so the caller can start their uploads. */
+  addPhotos: (uris: string[]) => DraftPhoto[];
+  setPhotoKey: (photoId: string, key: string) => void;
+  removePhoto: (photoId: string) => void;
   discard: () => void;
 }
 
@@ -71,7 +86,13 @@ export const useWorkoutDraft = create<DraftState>()(
         start: () => {
           if (get().draft) return; // never clobber a workout already in progress
           set({
-            draft: { title: defaultWorkoutTitle(), visibility: "PUBLIC", startedAt: new Date().toISOString(), exercises: [] },
+            draft: {
+              title: defaultWorkoutTitle(),
+              visibility: "PUBLIC",
+              startedAt: new Date().toISOString(),
+              exercises: [],
+              photos: [],
+            },
           });
         },
 
@@ -106,6 +127,21 @@ export const useWorkoutDraft = create<DraftState>()(
         removeSet: (exerciseKey, setKey) =>
           update((d) => mapExercise(d, exerciseKey, (e) => ({ ...e, sets: e.sets.filter((s) => s.key !== setKey) }))),
 
+        addPhotos: (uris) => {
+          const draft = get().draft;
+          if (!draft) return [];
+          const added = uris
+            .slice(0, MAX_PHOTOS - draft.photos.length)
+            .map((uri) => ({ id: newKey(), uri, key: null }));
+          set({ draft: { ...draft, photos: [...draft.photos, ...added] } });
+          return added;
+        },
+
+        setPhotoKey: (photoId, key) =>
+          update((d) => ({ ...d, photos: d.photos.map((p) => (p.id === photoId ? { ...p, key } : p)) })),
+
+        removePhoto: (photoId) => update((d) => ({ ...d, photos: d.photos.filter((p) => p.id !== photoId) })),
+
         discard: () => set({ draft: null }),
       };
     },
@@ -115,7 +151,7 @@ export const useWorkoutDraft = create<DraftState>()(
       partialize: (state) => ({ draft: state.draft }), // persist data, not functions
       // Bump `version` whenever the saved shape changes, and upgrade old data in
       // `migrate`. A draft saved by an older app version must still load.
-      version: 3,
+      version: 4,
       migrate: migrateDraft,
     },
   ),
@@ -127,6 +163,7 @@ export const useWorkoutDraft = create<DraftState>()(
  *   v0 -> v1: no `visibility` (Phase 4)    -> default PUBLIC, as the server does
  *   v1 -> v2: sets had no `done` flag       -> false
  *   v2 -> v3: sets had no cardio fields     -> distanceKm/duration ""
+ *   v3 -> v4: no photos (Phase 7)           -> []
  */
 export function migrateDraft(persisted: unknown, version: number): { draft: WorkoutDraft | null } {
   // Old shapes are untyped by definition, so treat them loosely and build the new one
@@ -151,6 +188,9 @@ export function migrateDraft(persisted: unknown, version: number): { draft: Work
         sets: (e.sets ?? []).map((set) => ({ ...set, distanceKm: set.distanceKm ?? "", duration: set.duration ?? "" })),
       })),
     };
+  }
+  if (draft && version < 4) {
+    draft = { ...draft, photos: draft.photos ?? [] };
   }
   return { draft: draft as unknown as WorkoutDraft | null };
 }
@@ -221,6 +261,8 @@ export function draftToInput(draft: WorkoutDraft, endedAt: Date = new Date()): D
       startedAt: draft.startedAt,
       endedAt: endedAt.toISOString(),
       exercises,
+      // Only finished uploads; the logger makes sure none is still pending first
+      photoKeys: draft.photos.flatMap((p) => (p.key ? [p.key] : [])),
     },
   };
 }

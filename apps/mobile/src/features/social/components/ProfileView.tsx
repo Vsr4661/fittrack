@@ -46,7 +46,7 @@ function ProfileHeader({ profile }: { profile: Profile }) {
 
       <View style={styles.identity}>
         {/* Ring in the page background color separates the avatar from the cover */}
-        <Avatar name={profile.displayName} userId={profile.id} size={AVATAR_SIZE} ring={colors.background} />
+        <Avatar name={profile.displayName} userId={profile.id} uri={profile.avatarUrl} size={AVATAR_SIZE} ring={colors.background} />
         <Text style={styles.name} accessibilityRole="header">
           {profile.displayName}
         </Text>

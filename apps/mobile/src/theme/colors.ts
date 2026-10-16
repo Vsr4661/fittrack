@@ -55,6 +55,8 @@ export interface ColorTokens {
   danger: string;
   dangerSoft: string;
   overlay: string; // modal/bottom-sheet backdrop
+  scrim: string; // behind white text/icons ON A PHOTO: dark enough for any image
+  onScrim: string;
   skeleton: string;
   skeletonHighlight: string;
   tabBar: string;
@@ -82,6 +84,8 @@ export const lightColors: ColorTokens = {
   danger: "#B91C1C",
   dangerSoft: "#FEE2E2",
   overlay: "rgba(15, 23, 42, 0.45)",
+  scrim: "rgba(11, 15, 23, 0.72)", // same in both themes: the photo, not the theme, is the background
+  onScrim: palette.white,
   skeleton: palette.slate200,
   skeletonHighlight: palette.slate100,
   tabBar: palette.white,
@@ -109,6 +113,8 @@ export const darkColors: ColorTokens = {
   danger: palette.red400,
   dangerSoft: "rgba(248, 113, 113, 0.16)",
   overlay: "rgba(0, 0, 0, 0.6)",
+  scrim: "rgba(11, 15, 23, 0.72)", // same in both themes: the photo, not the theme, is the background
+  onScrim: palette.white,
   skeleton: palette.slate800,
   skeletonHighlight: palette.slate700,
   tabBar: palette.slate900,

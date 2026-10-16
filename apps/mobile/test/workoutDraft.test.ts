@@ -126,6 +126,7 @@ describe("draftToInput (validation + API payload)", () => {
     visibility: "FOLLOWERS",
     startedAt: "2026-10-15T10:00:00.000Z",
     exercises,
+    photos: [],
   });
   const set = (reps: string, weightKg: string, isWarmup = false, done = false) => ({ key: Math.random().toString(), reps, weightKg, distanceKm: "", duration: "", isWarmup, done });
   const cardio = (distanceKm: string, duration: string, isWarmup = false) => ({ key: Math.random().toString(), reps: "", weightKg: "", distanceKm, duration, isWarmup, done: false });
@@ -186,6 +187,7 @@ describe("draftToInput (validation + API payload)", () => {
           },
           { exerciseId: "ex-squat", sets: [{ reps: 12, isWarmup: false }] },
         ],
+        photoKeys: [],
       },
     });
   });
@@ -221,7 +223,7 @@ describe("persisted draft migration", () => {
   it("upgrades a v0 draft (saved before visibility existed) to PUBLIC", () => {
     const v0 = { draft: { title: "Old", startedAt: "2026-10-15T10:00:00.000Z", exercises: [] } };
 
-    expect(migrateDraft(v0, 0)).toEqual({ draft: { ...v0.draft, visibility: "PUBLIC" } });
+    expect(migrateDraft(v0, 0)).toEqual({ draft: { ...v0.draft, visibility: "PUBLIC", photos: [] } });
   });
 
   it("upgrades a v1 draft: sets gain done = false, nothing else changes", () => {
@@ -266,6 +268,19 @@ describe("persisted draft migration", () => {
     expect(migrateDraft(v2, 2).draft?.exercises[0]!.sets[0]).toEqual({ key: "s1", reps: "5", weightKg: "120", isWarmup: false, done: true, distanceKm: "", duration: "" });
   });
 
+  it("upgrades a v3 draft: gains an empty photo list, everything else untouched", () => {
+    const v3 = { draft: { title: "Run", visibility: "PUBLIC", startedAt: "2026-10-15T10:00:00.000Z", exercises: [{ key: "e1", exercise: run, sets: [] }] } };
+
+    expect(migrateDraft(v3, 3)).toEqual({ draft: { ...v3.draft, photos: [] } });
+  });
+
+  it("keeps photos of a draft that's already v4 (a later step never wipes them)", () => {
+    const photos = [{ id: "p1", uri: "file:///a.jpg", key: "workout-photos/u/a.jpg" }];
+    const v4 = { draft: { title: "Run", visibility: "PUBLIC", startedAt: "2026-10-15T10:00:00.000Z", exercises: [], photos } };
+
+    expect(migrateDraft(v4, 4).draft?.photos).toEqual(photos);
+  });
+
   it("leaves an empty v0 state alone", () => {
     expect(migrateDraft({ draft: null }, 0)).toEqual({ draft: null });
   });
@@ -306,3 +321,43 @@ describe("cardio units", () => {
     expect(loadStat({ totalVolumeGrams: 0, totalDistanceM: 0 })).toMatchObject({ label: "Volume", value: "0 kg" });
   });
 });
+
+describe("draft photos", () => {
+  it("adds up to 4 photos (the server's limit) and returns only the ones added", () => {
+    store().start();
+    expect(store().addPhotos(["a", "b", "c"])).toHaveLength(3);
+
+    const added = store().addPhotos(["d", "e"]);
+
+    expect(added.map((p) => p.uri)).toEqual(["d"]);
+    expect(draft().photos.map((p) => p.uri)).toEqual(["a", "b", "c", "d"]);
+    expect(draft().photos.every((p) => p.key === null)).toBe(true);
+  });
+
+  it("records a finished upload's key, and removes photos", () => {
+    store().start();
+    const [first, second] = store().addPhotos(["a", "b"]);
+
+    store().setPhotoKey(first!.id, "workout-photos/u/a.jpg");
+    store().removePhoto(second!.id);
+
+    expect(draft().photos).toEqual([{ id: first!.id, uri: "a", key: "workout-photos/u/a.jpg" }]);
+  });
+
+  it("sends only uploaded photos, in order, as photoKeys", () => {
+    const result = draftToInput({
+      title: "Legs",
+      visibility: "PUBLIC",
+      startedAt: "2026-10-15T10:00:00.000Z",
+      exercises: [{ key: "e", exercise: squat, sets: [{ key: "s", reps: "5", weightKg: "100", distanceKm: "", duration: "", isWarmup: false, done: false }] }],
+      photos: [
+        { id: "1", uri: "a", key: "k-a" },
+        { id: "2", uri: "b", key: null },
+        { id: "3", uri: "c", key: "k-c" },
+      ],
+    });
+
+    expect(result.ok && result.input.photoKeys).toEqual(["k-a", "k-c"]);
+  });
+});
+

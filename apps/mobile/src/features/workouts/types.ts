@@ -42,6 +42,13 @@ export interface WorkoutSet {
   isWarmup: boolean;
 }
 
+/** `url` is a short-lived signed link; `key` is stable (use it as the image cache key). */
+export interface WorkoutPhoto {
+  id: string;
+  key: string;
+  url: string;
+}
+
 export interface WorkoutDetail {
   id: string;
   userId: string;
@@ -53,6 +60,7 @@ export interface WorkoutDetail {
   author: Author;
   stats: WorkoutStats;
   social: WorkoutSocial;
+  photos: WorkoutPhoto[];
   exercises: { id: string; position: number; notes: string | null; exercise: Exercise; sets: WorkoutSet[] }[];
 }
 
@@ -64,6 +72,7 @@ export interface WorkoutSummary {
   endedAt: string | null;
   author: Author;
   exerciseNames: string[];
+  photos: WorkoutPhoto[];
   stats: WorkoutStats;
   social: WorkoutSocial;
 }
@@ -82,5 +91,6 @@ export interface WorkoutInput {
   exercises: {
     exerciseId: string;
     sets: { reps?: number; weightGrams?: number; durationSec?: number; distanceM?: number; isWarmup?: boolean }[];
-  }[];
+  }[];  /** Keys from POST /uploads, in display order. */
+  photoKeys?: string[];
 }

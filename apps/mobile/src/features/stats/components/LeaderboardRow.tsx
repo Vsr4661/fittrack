@@ -24,7 +24,7 @@ export function LeaderboardRow({ entry, metric }: { entry: LeaderboardEntry; met
       <Text style={styles.rank} maxFontSizeMultiplier={textScale.chrome}>
         {entry.rank}
       </Text>
-      <Avatar name={entry.user.displayName} userId={entry.user.id} size={40} />
+      <Avatar name={entry.user.displayName} userId={entry.user.id} uri={entry.user.avatarUrl} size={40} />
       <View style={styles.text}>
         <Text style={styles.name} numberOfLines={stacked ? 2 : 1}>
           {entry.isMe ? "You" : entry.user.displayName}

@@ -68,7 +68,7 @@ export default function HomeScreen() {
           {me.data ? (
             <Link href="/profile" asChild>
               <Pressable accessibilityRole="link" accessibilityLabel="Your profile" hitSlop={8}>
-                <Avatar name={me.data.displayName} userId={me.data.id} size={48} />
+                <Avatar name={me.data.displayName} userId={me.data.id} uri={me.data.avatarUrl} size={48} />
               </Pressable>
             </Link>
           ) : null}

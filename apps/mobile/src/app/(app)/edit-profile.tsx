@@ -7,6 +7,8 @@ import { Alert, ScrollView } from "react-native";
 import { z } from "zod";
 import { Button, ErrorState, Input, KeyboardScreen, LoadingState, toast } from "@/components/ui";
 import { useMe } from "@/features/auth/hooks";
+import type { User } from "@/features/auth/types";
+import { AvatarEditor } from "@/features/social/components/AvatarEditor";
 import { FormErrorBanner } from "@/features/auth/components/FormErrorBanner";
 import { useServerErrors } from "@/features/auth/useServerErrors";
 import { useUpdateMe } from "@/features/social/hooks";
@@ -27,10 +29,12 @@ export default function EditProfileScreen() {
   if (me.isPending) return <LoadingState />;
   if (me.isError) return <ErrorState error={me.error} onRetry={() => me.refetch()} />;
   // Mount the form only once the user is loaded, so defaultValues are real
-  return <EditProfileForm initial={{ displayName: me.data.displayName, bio: me.data.bio ?? "" }} />;
+  return <EditProfileForm user={me.data} initial={{ displayName: me.data.displayName, bio: me.data.bio ?? "" }} />;
 }
 
-function EditProfileForm({ initial }: { initial: EditProfileInput }) {
+// `user` re-renders with the live cache (the avatar saves on its own, outside the form);
+// `initial` only seeds the form fields once.
+function EditProfileForm({ user, initial }: { user: User; initial: EditProfileInput }) {
   const styles = useStyles();
   const updateMe = useUpdateMe();
   const { control, handleSubmit, setError, formState } = useForm<EditProfileInput>({
@@ -66,6 +70,7 @@ function EditProfileForm({ initial }: { initial: EditProfileInput }) {
   return (
     <KeyboardScreen style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <AvatarEditor user={user} />
         <Controller
           control={control}
           name="displayName"

@@ -10,7 +10,7 @@ export function AuthorRow({ author, subtitle }: { author: Author; subtitle?: str
   return (
     <Link href={`/user/${author.username}`} asChild>
       <Pressable style={styles.row} accessibilityRole="link" accessibilityLabel={`Open ${author.displayName}'s profile`}>
-        <Avatar name={author.displayName} userId={author.id} size={36} />
+        <Avatar name={author.displayName} userId={author.id} uri={author.avatarUrl} size={36} />
         <View style={styles.text}>
           <Text style={styles.name} numberOfLines={1}>
             {author.displayName}

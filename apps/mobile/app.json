@@ -40,7 +40,16 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FitTrack lets you add photos from your library to your workouts and profile.",
+          "cameraPermission": "FitTrack lets you take photos for your workouts and profile.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "scheme": "fittrack",
     "experiments": {

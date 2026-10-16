@@ -78,7 +78,7 @@ export function CommentsSection({ workoutId, myUserId, workoutOwnerId }: Comment
           onAccessibilityAction={(e) => e.nativeEvent.actionName === "delete" && confirmDelete(c)}
           accessibilityHint={canDelete(c) ? "Long press, or use actions, to delete" : undefined}
         >
-          <Avatar name={c.author.displayName} userId={c.author.id} size={32} />
+          <Avatar name={c.author.displayName} userId={c.author.id} uri={c.author.avatarUrl} size={32} />
           <View style={styles.bubble}>
             <Text style={styles.author}>{c.author.displayName}</Text>
             <Text style={styles.body}>{c.body}</Text>

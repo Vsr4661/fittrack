@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
-import { Card } from "@/components/ui";
+import { Card, Photo } from "@/components/ui";
 import { AuthorRow } from "@/features/social/components/AuthorRow";
 import { LikeButton } from "@/features/social/components/LikeButton";
-import { makeStyles, useTheme } from "@/theme";
+import { makeStyles, textScale, useTheme } from "@/theme";
 import { formatDuration, formatWorkoutDate, loadStat } from "../format";
 import type { WorkoutSummary } from "../types";
 
@@ -19,9 +19,11 @@ export function WorkoutCard({ workout, showAuthor = false }: WorkoutCardProps) {
   const { colors } = useTheme();
   const { stats, social } = workout;
   const open = () => router.push(`/workout/${workout.id}`);
+  const [cover] = workout.photos;
+  const photoNote = workout.photos.length > 0 ? `, ${workout.photos.length} ${workout.photos.length === 1 ? "photo" : "photos"}` : "";
 
   return (
-    <Card onPress={open} accessibilityLabel={`${workout.title}, ${formatWorkoutDate(workout.startedAt)}`}>
+    <Card onPress={open} accessibilityLabel={`${workout.title}, ${formatWorkoutDate(workout.startedAt)}${photoNote}`}>
       {showAuthor ? <AuthorRow author={workout.author} subtitle={formatWorkoutDate(workout.startedAt)} /> : null}
 
       <View style={styles.header}>
@@ -42,6 +44,20 @@ export function WorkoutCard({ workout, showAuthor = false }: WorkoutCardProps) {
       <Text style={styles.exercises} numberOfLines={2}>
         {workout.exerciseNames.join(" · ")}
       </Text>
+
+      {/* The first photo as a cover; the rest are on the detail screen */}
+      {cover ? (
+        <View>
+          <Photo uri={cover.url} cacheKey={cover.key} style={styles.cover} />
+          {workout.photos.length > 1 ? (
+            <View style={styles.more}>
+              <Text style={styles.moreText} maxFontSizeMultiplier={textScale.chrome}>
+                +{workout.photos.length - 1}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       {/* Stat tiles: the numbers people scan for, big and tabular */}
       <View style={styles.stats}>
@@ -80,6 +96,17 @@ const useStyles = makeStyles((t) => ({
   title: { ...t.typography.heading, color: t.colors.text, flex: 1 },
   date: { ...t.typography.caption, color: t.colors.textMuted },
   exercises: { ...t.typography.body, fontSize: 14, color: t.colors.textMuted, marginTop: -t.spacing.xs },
+  cover: { width: "100%", aspectRatio: 16 / 10, borderRadius: t.radius.md },
+  more: {
+    position: "absolute",
+    right: t.spacing.sm,
+    bottom: t.spacing.sm,
+    paddingHorizontal: t.spacing.sm,
+    paddingVertical: t.spacing.xxs,
+    borderRadius: t.radius.pill,
+    backgroundColor: t.colors.scrim,
+  },
+  moreText: { ...t.typography.label, color: t.colors.onScrim, fontVariant: ["tabular-nums"] },
   stats: { flexDirection: "row", gap: t.spacing.sm },
   stat: {
     flex: 1,

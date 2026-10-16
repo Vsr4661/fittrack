@@ -1,5 +1,7 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { meQueryKey } from "@/features/auth/session";
+import type { User } from "@/features/auth/types";
+import { prepareImage, uploadImage } from "@/features/uploads/uploadImage";
 import { workoutKeys } from "@/features/workouts/hooks";
 import { socialApi } from "./api";
 import { adjustCommentCount, applyLike, updateWorkoutEverywhere } from "./cache";
@@ -158,6 +160,33 @@ export function useDeleteComment(workoutId: string) {
 }
 
 // ─── Edit profile ──────────────────────────────────────
+
+/** After my avatar changes: my own copy, my profile, and lists where I'm the author. */
+function useOnAvatarChanged() {
+  const queryClient = useQueryClient();
+  return (user: User) => {
+    queryClient.setQueryData(meQueryKey, user);
+    queryClient.invalidateQueries({ queryKey: socialKeys.profile(user.username) });
+    queryClient.invalidateQueries({ queryKey: workoutKeys.all }); // author.avatarUrl on my cards
+  };
+}
+
+/** Pick -> resize to 512px -> upload -> set. One mutation, so one pending/error state for the UI. */
+export function useSetAvatar() {
+  const onChanged = useOnAvatarChanged();
+  return useMutation({
+    mutationFn: async (asset: { uri: string; width: number; height: number }) => {
+      const uri = await prepareImage(asset, "AVATAR");
+      return socialApi.setAvatar(await uploadImage(uri, "AVATAR"));
+    },
+    onSuccess: onChanged,
+  });
+}
+
+export function useRemoveAvatar() {
+  const onChanged = useOnAvatarChanged();
+  return useMutation({ mutationFn: socialApi.removeAvatar, onSuccess: onChanged });
+}
 
 export function useUpdateMe() {
   const queryClient = useQueryClient();
