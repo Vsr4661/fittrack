@@ -244,6 +244,11 @@ A cool slate neutral world with one hot accent family, used sparingly.
   that shade passed on white but failed on Chalk and Chalk Dust; it now
   measures ≥4.80:1 on every light surface.
 
+- **Scrim** (`scrim`, 72% Iron in both themes) with **On Scrim** white: the only
+  background for text or icons sitting ON a photo ("+2", "1 / 3", remove, upload
+  progress). The photo, not the theme, is the background, so it is measured
+  against the worst case: white on Scrim over a pure-white photo is 7.8:1.
+
 ### Status
 - **Done Green** (`done-green` / `done-green-dark`, wash `done-wash`): completed sets, success toasts.
 - **Warmup Amber** (`warmup-amber` / `warmup-amber-dark`, wash `warmup-wash`): warmup sets.
@@ -390,6 +395,19 @@ Confident and tactile: a solid fill, a slight shrink under the finger.
 - **Loading / Empty / Error:** skeletons that match the final layout; empty
   states with an icon in an Ember Wash circle, a title and one helpful
   sentence; error states with the real message and a Retry button.
+
+### Photos
+- **Photo** (`components/ui/Photo.tsx`): cover-cropped on a Chalk Dust placeholder,
+  150 ms fade (none with Reduce Motion), cached by storage key.
+- **Feed card cover:** the first photo at 16:10 with 12pt corners, between the
+  exercise list and the stat tiles; a Scrim "+N" pill when there are more.
+- **Detail gallery:** full-width 4:3 pages, 16pt corners, a Scrim "1 / 3"
+  counter (clearer than dots at a glance).
+- **Logger strip:** 84pt thumbnails, a dashed "Add" tile in Ember Text, a Scrim
+  overlay with a spinner or retry icon while uploading or failed, and a small
+  remove dot whose touch area is 44pt.
+- **Avatar:** the photo in a circle over the initials, so initials show while it
+  loads or if it fails.
 
 ### Progress Ring (signature)
 The weekly-goal and rest-timer ring: a Chalk Dust track with an Effort Orange

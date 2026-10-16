@@ -200,6 +200,53 @@ can't shadow static routes.
 
 ---
 
+## 6b. Photos (Phase 7: `lib/storage.ts`, `modules/uploads/`, `features/uploads/`)
+
+### Pre-signed URLs: the bytes never touch the API
+1. `POST /uploads { kind, contentType, size }`: the server picks the key
+   (`<kind>/<userId>/<uuid>.jpg`), stores it as a **pending** row in `uploads`,
+   and returns a 5-minute PUT link.
+2. The phone PUTs the file straight to storage. Content-Type **and** byte size
+   are part of the signature, so storage rejects anything else (403).
+3. The phone saves the workout with `photoKeys`. `assertUploaded` checks every key
+   is the caller's pending upload of the right kind AND that the file arrived
+   (HEAD). `consumeUploads` deletes the pending rows inside the save transaction
+   with a count check, so two racing saves can't attach the same file
+   (`UNIQUE(key)` on `workout_photos` is the backstop).
+
+Why: the API stays fast (no 5 MB bodies through Express), storage scales on its
+own, and "who owns this file" is proven by the server's own records, never by
+anything the client says.
+
+### Private bucket, links minted after `visibleTo`
+Workout photo links are signed when a workout is **serialized**, which only
+happens after the visibility check. A Followers-only photo is as private as the
+workout. Signed links change on every response, so the app caches images by the
+**storage key** (`expo-image` `cacheKey`), not the URL.
+
+### Avatars: a computed field and a stable public link
+`users.avatarKey` stores a key, never a URL (links expire, domains change). A Prisma
+**result extension** in `lib/prisma.ts` computes `avatarUrl` on every read,
+nested ones too, so the ~10 places that select a user didn't change. The link is
+`/api/v1/media/avatars/...`, which 302s to a fresh signed URL, but only for a
+user's **current** avatar. The base URL comes from `PUBLIC_API_URL`, never the
+`Host` header (a forged Host would point other people's avatar links elsewhere).
+
+### On the phone
+- `prepareImage` resizes (1600 px / 512 px) and re-encodes to JPEG, which **drops
+  EXIF including GPS**. Verified: a GPS-tagged photo uploaded from the simulator
+  is stored with no metadata. The server can't strip it; it never sees the bytes.
+- The draft (persisted, v4) holds `photos: [{ id, uri, key }]`; upload progress
+  lives in a separate, **non-persisted** store, because an in-flight upload can't
+  survive the app being killed. On relaunch, photos without a key re-upload.
+- Abandoned uploads are swept hourly after 24 h (rows kept if the delete fails,
+  so the next run retries).
+
+> **Interview:** *"Why not upload through your API?"*, *"How do you stop someone
+> attaching another user's file?"*, *"How are private photos kept private?"*
+
+---
+
 ## 7. Mobile app (`apps/mobile/src`)
 
 ### Where state lives (the most important mobile decision)
@@ -273,6 +320,9 @@ older app version still load.
 | Unknown routes returned 401 | `router.use(requireAuth)` on a router mounted at `/api/v1` | per-route auth on broadly-mounted routers |
 | `npm ci` failed on fresh clones | Prisma's `env()` throws when `DATABASE_URL` is unset; `generate` didn't need it | read it optionally; test in a clean clone |
 | Jest hung 5 min after passing | TanStack Query GC timers in a test `QueryClient` | `gcTime: Infinity` in tests |
+| Every pre-signed upload failed (BadDigest) | AWS SDK ≥3.729 signs a CRC32 checksum by default; a presigned URL is signed before the body exists, so it signed an EMPTY body's checksum | `requestChecksumCalculation: "WHEN_REQUIRED"`; test against real storage |
+| Docker crashing, images segfaulting | the Mac's disk was full (135 MB free); an image downloaded mid-crisis was corrupted | free space, re-pull; check `df -h` before blaming the tool |
+| Race test passed with its guard removed | `UNIQUE(key)` still blocked the double attach, but losers got a 500 | assert losers get a clean 4xx, not just "one winner" |
 
 ---
 
@@ -288,3 +338,6 @@ older app version still load.
 8. Why are likes `PUT`/`DELETE` instead of `POST /toggle`?
 9. A user likes a workout offline. What does the UI do, and how does it recover?
 10. Why does `/health` not check the database?
+11. Walk through a photo upload. Which step proves the file is yours, and which proves it arrived?
+12. Why are workout photo links signed per response but avatar links stable?
+

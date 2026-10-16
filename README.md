@@ -56,6 +56,11 @@ Full-stack TypeScript: React Native (Expo) app + Node.js/Express API, with real-
 - A confetti celebration only for a *real* new record, never for your first-ever session of an exercise
 - Leaderboard: you vs. people you follow over a rolling 7 or 30 days, by volume or workout count
 
+**Photos**
+- Up to 4 photos per workout and a profile photo, uploaded straight from the phone to S3-compatible storage with pre-signed URLs
+- Resized and re-encoded on the phone, which strips location (GPS) data before anything leaves the device
+- A private bucket: photo links are only created for people allowed to see the workout
+
 **Social**
 - Follow people, a feed of their workouts, likes, comments and user search
 - **Real-time** (Socket.IO): likes and comments appear live on an open workout; toasts when someone likes or comments on yours; a "New workouts" pill when someone you follow posts
@@ -77,6 +82,7 @@ Full-stack TypeScript: React Native (Expo) app + Node.js/Express API, with real-
 | API | Node.js 24 · Express 5 · TypeScript 7 · Zod validation |
 | Data | PostgreSQL 17 · Prisma 7 · Redis 7 (cache + rate limiting) |
 | Real-time | Socket.IO 4 (WebSocket transport) |
+| Storage | S3 API (AWS SDK v3, pre-signed URLs) · SeaweedFS locally · expo-image |
 | Auth | JWT access tokens + rotating refresh tokens · expo-secure-store |
 | Quality | Jest (server + mobile) · GitHub Actions CI · Docker Compose |
 
@@ -93,11 +99,12 @@ The decisions worth asking about. Each is explained in depth in [CODE_TOUR.md](C
 - **Time zones stay on the device.** The app sends "Monday 00:00 in *my* time zone" and the server never guesses. The leaderboard uses rolling windows for the same reason.
 - **Personal records in one query** with Postgres `DISTINCT ON`: heaviest set per exercise, ties broken by reps, then by the earliest date (so repeating a record isn't a new one).
 - **Idempotent writes:** likes are `PUT`/`DELETE`, not a toggle, so a retried request can't flip a like back off.
+- **Uploads the API never touches.** The server signs a link locked to one content type and byte size; the phone sends the bytes to storage. Attaching a file proves ownership from the server's own pending-upload records, inside the save transaction, so racing requests can't attach one file twice.
 - **Cache-aside with explicit invalidation** (Redis) for profile counts. Feed fan-out happens on read.
 
 ### Testing
 
-- **99 server tests** (real Postgres + Redis, real sockets on a random port) and **93 mobile tests**
+- **136 server tests** (real Postgres, Redis and object storage, real sockets on a random port) and **103 mobile tests**
 - **Mutation-checked:** for security and correctness rules (privacy, auth, socket fan-out, record ties, DST handling, double counting), each rule was deliberately broken to confirm a test fails
 - CI runs typecheck, build and tests for both apps on every push
 
@@ -108,10 +115,10 @@ The decisions worth asking about. Each is explained in depth in [CODE_TOUR.md](C
 ```
 fittrack/
 ├── apps/
-│   ├── server/          Express API: modules/{auth,users,workouts,social,stats}, realtime/, prisma/
+│   ├── server/          Express API: modules/{auth,users,workouts,social,stats,uploads}, realtime/, prisma/
 │   └── mobile/          Expo app: src/app (routes), src/features/*, src/components/ui, src/theme
 ├── docs/screenshots/    README images
-├── docker-compose.yml   Postgres 17 + Redis 7 for local development
+├── docker-compose.yml   Postgres 17 + Redis 7 + SeaweedFS (S3) for local development
 ├── CODE_TOUR.md         Architecture + design decisions, file by file
 └── CLAUDE.md            Working rules and conventions for this repo
 ```
@@ -128,7 +135,7 @@ More docs: [apps/mobile/DESIGN.md](apps/mobile/DESIGN.md) (design system) · [ap
 # 1. Install dependencies (npm workspaces: server + mobile)
 npm install
 
-# 2. Start Postgres and Redis
+# 2. Start Postgres, Redis and local S3 storage
 docker compose up -d --wait
 
 # 3. Configure the API (then set JWT_ACCESS_SECRET, e.g. `openssl rand -base64 48`)
@@ -174,9 +181,9 @@ Built so far, in order:
 | UI | Design system, component library, redesign of every screen, accessibility pass |
 | — | Progress and Leaderboard (with server endpoints), cardio logging |
 | 6 | Real-time updates with Socket.IO |
+| 7 | Photo uploads (workouts + avatars) with pre-signed URLs |
 
 Next:
-- **Phase 7:** photo uploads to S3 with pre-signed URLs
 - **Phase 8:** push notifications (Expo Push)
 - **Phase 9:** payments with Stripe, plus deployment
 
