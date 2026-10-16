@@ -37,6 +37,11 @@ enum Visibility {
   PRIVATE
 }
 
+enum UploadKind {
+  WORKOUT_PHOTO
+  AVATAR
+}
+
 // ─── Users & social graph ──────────────────────────────
 
 model User {
@@ -46,7 +51,9 @@ model User {
   passwordHash String
   displayName  String
   bio          String?
-  avatarUrl    String?
+  // A storage key, not a URL: links expire and hosts change. The API returns a
+  // computed `avatarUrl` instead (see lib/prisma.ts).
+  avatarKey    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -57,6 +64,7 @@ model User {
   customExercises Exercise[]
   followers       Follow[]       @relation("following")
   following       Follow[]       @relation("follower")
+  uploads         Upload[]
 
   @@map("users")
 }
@@ -131,6 +139,7 @@ model Workout {
   exercises WorkoutExercise[]
   likes     Like[]
   comments  Comment[]
+  photos    WorkoutPhoto[]
 
   // Serves "a user's workouts, newest first" (profile page + feed fan-in)
   @@index([userId, startedAt(sort: Desc)])
@@ -202,4 +211,37 @@ model Comment {
   @@index([workoutId, id])
   @@index([userId])
   @@map("comments")
+}
+
+// ─── Photos ────────────────────────────────────────────
+
+/// An upload link the server handed out whose file isn't attached to anything
+/// yet. Attaching deletes the row; rows that stay too long are swept (with
+/// their files), so abandoned uploads don't pile up in storage.
+model Upload {
+  key         String     @id // chosen by the server: <kind>/<userId>/<uuid>.<ext>
+  userId      String     @db.Uuid
+  kind        UploadKind
+  contentType String
+  sizeBytes   Int
+  createdAt   DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt]) // the sweep looks for old rows
+  @@map("uploads")
+}
+
+model WorkoutPhoto {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  workoutId String   @db.Uuid
+  key       String   @unique // one file belongs to one workout
+  position  Int // 1-based display order, derived from array order like sets
+  createdAt DateTime @default(now())
+
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  @@unique([workoutId, position])
+  @@map("workout_photos")
 }

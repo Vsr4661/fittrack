@@ -3,7 +3,9 @@ import { cacheKeys, invalidate } from "../../lib/cache.js";
 import { prisma } from "../../lib/prisma.js";
 import { publishWorkoutChanged, publishWorkoutCreated } from "../../realtime/publish.js";
 import { AppError } from "../../utils/AppError.js";
+import { assertUploaded, consumeUploads, deleteObjectsLater } from "../uploads/uploads.service.js";
 import { authorSelect } from "../users/users.select.js";
+import { photosSelect, withPhotoUrls } from "./photos.js";
 import { visibleTo } from "./visibility.js";
 import { distanceMeters, volumeGrams, workingSets } from "./volume.js";
 import type { ListWorkoutsQuery, WorkoutInput } from "./workouts.schemas.js";
@@ -48,10 +50,12 @@ function workoutSelect(viewerId: string) {
         sets: { orderBy: { setNumber: "asc" }, select: setSelect },
       },
     },
+    photos: photosSelect,
   } satisfies Prisma.WorkoutSelect;
 }
 
-type WorkoutRow = Prisma.WorkoutGetPayload<{ select: ReturnType<typeof workoutSelect> }>;
+// From the EXTENDED client, so computed fields (author.avatarUrl) are in the type
+type WorkoutRow = Prisma.Result<typeof prisma.workout, { select: ReturnType<typeof workoutSelect> }, "findFirstOrThrow">;
 
 // ─── Queries ───────────────────────────────────────────
 
@@ -98,7 +102,7 @@ async function listWorkouts(viewerId: string, where: Prisma.WorkoutWhereInput, {
   const hasMore = rows.length > limit;
   const page = hasMore ? rows.slice(0, limit) : rows;
   return {
-    items: page.map(toSummary),
+    items: await Promise.all(page.map(toSummary)),
     nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null,
   };
 }
@@ -123,12 +127,21 @@ export async function assertWorkoutVisible(viewerId: string, workoutId: string) 
 
 export async function createWorkout(userId: string, input: WorkoutInput) {
   await assertExercisesUsable(userId, input);
+  await assertUploaded(userId, "WORKOUT_PHOTO", input.photoKeys);
 
-  // One nested create = one transaction: either the whole workout (with every
-  // exercise and set) is saved, or nothing is. No half-saved workouts.
-  const workout = await prisma.workout.create({
-    data: { userId, ...workoutScalars(input), exercises: { create: nestedExercises(input) } },
-    select: workoutSelect(userId),
+  // One transaction: the whole workout (every exercise, set and photo) is
+  // saved and its uploads consumed, or nothing is. No half-saved workouts.
+  const workout = await prisma.$transaction(async (tx) => {
+    await consumeUploads(tx, userId, input.photoKeys);
+    return tx.workout.create({
+      data: {
+        userId,
+        ...workoutScalars(input),
+        exercises: { create: nestedExercises(input) },
+        photos: { create: nestedPhotos(input) },
+      },
+      select: workoutSelect(userId),
+    });
   });
   await invalidate(cacheKeys.profileCounts(userId)); // workout count changed
   publishWorkoutCreated(workout.id, userId);
@@ -138,6 +151,11 @@ export async function createWorkout(userId: string, input: WorkoutInput) {
 /** PUT semantics: the client sends the whole workout and it replaces what's stored. */
 export async function replaceWorkout(userId: string, workoutId: string, input: WorkoutInput) {
   await assertExercisesUsable(userId, input);
+  // Keys already on this workout are kept; any other key must be a fresh upload.
+  // (Filtered by userId: someone else's workout yields [], and the update below 404s.)
+  const current = await photoKeysOf({ id: workoutId, userId });
+  const added = input.photoKeys.filter((key) => !current.includes(key));
+  await assertUploaded(userId, "WORKOUT_PHOTO", added);
 
   const workout = await prisma.$transaction(async (tx) => {
     const { count } = await tx.workout.updateMany({
@@ -145,23 +163,29 @@ export async function replaceWorkout(userId: string, workoutId: string, input: W
       data: workoutScalars(input),
     });
     if (count === 0) throw AppError.notFound("Workout not found");
+    await consumeUploads(tx, userId, added);
 
     // Replacing children wholesale is simpler and safer than diffing them
     await tx.workoutExercise.deleteMany({ where: { workoutId } });
+    await tx.workoutPhoto.deleteMany({ where: { workoutId } });
     return tx.workout.update({
       where: { id: workoutId },
-      data: { exercises: { create: nestedExercises(input) } },
+      data: { exercises: { create: nestedExercises(input) }, photos: { create: nestedPhotos(input) } },
       select: workoutSelect(userId),
     });
   });
+  // Only after the commit: a rolled-back edit must not lose the old files
+  deleteObjectsLater(current.filter((key) => !input.photoKeys.includes(key)));
   publishWorkoutChanged(workoutId); // visibility may have changed: re-check watchers
   return toDetail(workout);
 }
 
 export async function deleteWorkout(userId: string, workoutId: string) {
-  // Exercises, sets, likes and comments go too, via ON DELETE CASCADE
+  const photoKeys = await photoKeysOf({ id: workoutId, userId });
+  // Exercises, sets, photos, likes and comments go too, via ON DELETE CASCADE
   const { count } = await prisma.workout.deleteMany({ where: { id: workoutId, userId } });
   if (count === 0) throw AppError.notFound("Workout not found");
+  deleteObjectsLater(photoKeys); // the cascade removed the rows, not the files
   await invalidate(cacheKeys.profileCounts(userId));
   publishWorkoutChanged(workoutId); // it's gone: nobody can see it now
 }
@@ -199,6 +223,15 @@ function nestedExercises(input: WorkoutInput) {
   }));
 }
 
+function nestedPhotos(input: WorkoutInput) {
+  return input.photoKeys.map((key, i) => ({ key, position: i + 1 }));
+}
+
+async function photoKeysOf(where: { id: string; userId: string }) {
+  const photos = await prisma.workoutPhoto.findMany({ where: { workout: where }, select: { key: true } });
+  return photos.map((p) => p.key);
+}
+
 function computeStats(workout: WorkoutRow) {
   const sets = workout.exercises.flatMap((e) => e.sets);
   return {
@@ -220,13 +253,19 @@ function toSocial(workout: WorkoutRow) {
   };
 }
 
-function toDetail(workout: WorkoutRow) {
-  const { user, _count, likes, ...rest } = workout;
-  return { ...rest, author: user, stats: computeStats(workout), social: toSocial(workout) };
+async function toDetail(workout: WorkoutRow) {
+  const { user, _count, likes, photos, ...rest } = workout;
+  return {
+    ...rest,
+    author: user,
+    photos: await withPhotoUrls(photos),
+    stats: computeStats(workout),
+    social: toSocial(workout),
+  };
 }
 
 /** List rows don't need every set, just enough for a feed/history card. */
-function toSummary(workout: WorkoutRow) {
+async function toSummary(workout: WorkoutRow) {
   return {
     id: workout.id,
     title: workout.title,
@@ -235,6 +274,7 @@ function toSummary(workout: WorkoutRow) {
     endedAt: workout.endedAt,
     author: workout.user,
     exerciseNames: workout.exercises.map((e) => e.exercise.name),
+    photos: await withPhotoUrls(workout.photos),
     stats: computeStats(workout),
     social: toSocial(workout),
   };

@@ -11,6 +11,8 @@ import { exercisesRouter } from "./modules/exercises/exercises.routes.js";
 import { workoutsRouter } from "./modules/workouts/workouts.routes.js";
 import { socialRouter } from "./modules/social/social.routes.js";
 import { statsRouter } from "./modules/stats/stats.routes.js";
+import { uploadsRouter } from "./modules/uploads/uploads.routes.js";
+import { mediaRouter } from "./routes/media.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 export function createApp() {
@@ -28,6 +30,8 @@ export function createApp() {
   app.use("/api/v1/workouts", workoutsRouter);
   app.use("/api/v1", socialRouter); // /feed, /workouts/:id/like|comments, /comments/:id
   app.use("/api/v1", statsRouter); // /progress, /leaderboard
+  app.use("/api/v1/uploads", uploadsRouter);
+  app.use("/api/v1/media", mediaRouter); // public: avatar redirects
 
   app.use(notFoundHandler);
   app.use(errorHandler);

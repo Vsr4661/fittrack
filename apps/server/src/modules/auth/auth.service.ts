@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { hash, verify } from "@node-rs/argon2";
 import { Prisma } from "../../generated/prisma/client.js";
 import { logger } from "../../lib/logger.js";
-import { prisma } from "../../lib/prisma.js";
+import { prisma, type Tx } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
 import { publicUserSelect } from "../users/users.select.js";
 import type { LoginInput, RegisterInput } from "./auth.schemas.js";
@@ -13,7 +13,7 @@ import {
   signAccessToken,
 } from "./tokens.js";
 
-type Db = Prisma.TransactionClient | typeof prisma;
+type Db = Tx | typeof prisma;
 
 export interface AuthTokens {
   accessToken: string;

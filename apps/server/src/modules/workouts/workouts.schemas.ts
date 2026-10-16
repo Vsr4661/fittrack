@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uploadKeySchema } from "../uploads/uploads.schemas.js";
 
 const setSchema = z
   .object({
@@ -21,6 +22,7 @@ const workoutExerciseSchema = z.object({
 });
 
 const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
+export const MAX_PHOTOS = 4;
 
 /** Used for both create (POST) and full replace (PUT). */
 export const workoutInputSchema = z
@@ -34,6 +36,13 @@ export const workoutInputSchema = z
       .transform((s) => new Date(s))
       .optional(),
     exercises: z.array(workoutExerciseSchema).min(1, "Add at least one exercise").max(30),
+    // Keys from POST /uploads (new photos) or this workout's current photos (kept on edit).
+    // Array order = display order. Omitted = no photos (PUT replaces, so it removes them).
+    photoKeys: z
+      .array(uploadKeySchema)
+      .max(MAX_PHOTOS, `Up to ${MAX_PHOTOS} photos`)
+      .refine((keys) => new Set(keys).size === keys.length, "The same photo twice")
+      .default([]),
   })
   .refine((w) => !w.endedAt || w.endedAt >= w.startedAt, {
     message: "A workout can't end before it starts",

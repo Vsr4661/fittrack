@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma.js";
 import { getAuthUser, requireAuth } from "../../middleware/requireAuth.js";
 import { AppError } from "../../utils/AppError.js";
+import { uploadKeySchema } from "../uploads/uploads.schemas.js";
 import { listWorkoutsQuerySchema } from "../workouts/workouts.schemas.js";
 import { listUserWorkouts } from "../workouts/workouts.service.js";
 import { publicUserSelect } from "./users.select.js";
@@ -12,6 +13,7 @@ export const usersRouter = Router();
 usersRouter.use(requireAuth);
 
 const usernameParamSchema = z.object({ username: z.string().trim().toLowerCase().min(3).max(30) });
+const avatarBodySchema = z.object({ key: uploadKeySchema });
 const searchQuerySchema = z.object({ q: z.string().trim().min(1).max(50) });
 const updateMeSchema = z
   .object({
@@ -39,6 +41,15 @@ usersRouter.get("/me", async (req, res) => {
 usersRouter.patch("/me", async (req, res) => {
   const data = updateMeSchema.parse(req.body);
   res.json({ user: await usersService.updateMe(getAuthUser(req).id, data) });
+});
+
+usersRouter.put("/me/avatar", async (req, res) => {
+  const { key } = avatarBodySchema.parse(req.body);
+  res.json({ user: await usersService.setAvatar(getAuthUser(req).id, key) });
+});
+
+usersRouter.delete("/me/avatar", async (req, res) => {
+  res.json({ user: await usersService.removeAvatar(getAuthUser(req).id) });
 });
 
 usersRouter.get("/search", async (req, res) => {

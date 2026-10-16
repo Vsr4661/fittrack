@@ -19,6 +19,11 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().regex(/^\d+[smhd]$/, "must look like 15m, 1h, 7d").default("15m"),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
+  // How phones reach this API, for absolute links the API hands out (avatars).
+  // An env var, never the request Host header: that is client-controlled, so a
+  // forged Host could point everyone else's avatar links at another server.
+  PUBLIC_API_URL: z.url().default("http://localhost:4000"),
+
   // Object storage (photos). Any S3-compatible service: SeaweedFS locally, AWS
   // S3 in production (leave S3_ENDPOINT unset and the SDK uses AWS's own).
   S3_ENDPOINT: z.url().optional(),

@@ -1,6 +1,7 @@
 import { cached, cacheKeys, invalidate } from "../../lib/cache.js";
 import { prisma } from "../../lib/prisma.js";
 import { AppError } from "../../utils/AppError.js";
+import { assertUploaded, consumeUploads, deleteObjectsLater } from "../uploads/uploads.service.js";
 import { profileSelect, publicUserSelect } from "./users.select.js";
 
 const PROFILE_COUNTS_TTL_SECONDS = 60;
@@ -79,4 +80,25 @@ export async function searchUsers(viewerId: string, query: string) {
 
 export async function updateMe(userId: string, data: { displayName?: string; bio?: string | null }) {
   return prisma.user.update({ where: { id: userId }, data, select: publicUserSelect });
+}
+
+/** Swaps in a freshly uploaded avatar; the old file is deleted once nothing points at it. */
+export async function setAvatar(userId: string, key: string) {
+  await assertUploaded(userId, "AVATAR", [key]);
+  const { previous, user } = await prisma.$transaction(async (tx) => {
+    await consumeUploads(tx, userId, [key]);
+    const before = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarKey: true } });
+    const user = await tx.user.update({ where: { id: userId }, data: { avatarKey: key }, select: publicUserSelect });
+    return { previous: before.avatarKey, user };
+  });
+  if (previous) deleteObjectsLater([previous]);
+  return user;
+}
+
+/** Back to initials. Idempotent: removing a missing avatar succeeds. */
+export async function removeAvatar(userId: string) {
+  const before = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarKey: true } });
+  const user = await prisma.user.update({ where: { id: userId }, data: { avatarKey: null }, select: publicUserSelect });
+  if (before.avatarKey) deleteObjectsLater([before.avatarKey]);
+  return user;
 }

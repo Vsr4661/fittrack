@@ -4,6 +4,7 @@ import { logger } from "./lib/logger.js";
 import { prisma } from "./lib/prisma.js";
 import { redis } from "./lib/redis.js";
 import { attachRealtime, closeRealtime } from "./realtime/io.js";
+import { sweepStaleUploads } from "./modules/uploads/uploads.service.js";
 
 const app = createApp();
 
@@ -11,6 +12,16 @@ const server = app.listen(env.PORT, () => {
   logger.info(`FitTrack API listening on http://localhost:${env.PORT}`);
 });
 attachRealtime(server); // Socket.IO shares the port: ws://localhost:PORT/socket.io/
+
+// Hourly cleanup of uploads that were never attached (abandoned drafts).
+// In-process is enough here: the sweep is idempotent, so several instances
+// running it is harmless. A bigger deployment would use a scheduled job.
+const sweepTimer = setInterval(() => {
+  sweepStaleUploads()
+    .then((n) => n > 0 && logger.info(`Swept ${n} stale uploads`))
+    .catch((err) => logger.error({ err }, "Stale upload sweep failed"));
+}, 60 * 60 * 1000);
+sweepTimer.unref(); // never keeps the process alive on its own
 
 function shutdown(signal: string) {
   logger.info(`${signal} received, shutting down gracefully`);
