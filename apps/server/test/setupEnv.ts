@@ -13,3 +13,7 @@ if (!process.env.DATABASE_URL?.includes("_test")) {
 if (!/\/[1-9]\d*$/.test(process.env.REDIS_URL ?? "")) {
   throw new Error(`Refusing to run tests against Redis DB 0: ${process.env.REDIS_URL}`);
 }
+// Tests upload and delete objects, so they get their own bucket
+if (!process.env.S3_BUCKET?.endsWith("-test")) {
+  throw new Error(`Refusing to run tests against a non-test bucket: ${process.env.S3_BUCKET}`);
+}

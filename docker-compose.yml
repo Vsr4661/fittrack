@@ -22,5 +22,24 @@ services:
       interval: 5s
       retries: 10
 
+  # S3-compatible object storage for photos (stands in for AWS S3 locally).
+  # SeaweedFS because MinIO stopped publishing Docker images. Configured only
+  # through env vars (no command args) so CI's service container can match it.
+  s3:
+    image: chrislusf/seaweedfs:4.48
+    environment:
+      # Local-only credentials (like the Postgres password above), mirrored in .env.example
+      AWS_ACCESS_KEY_ID: fittrack
+      AWS_SECRET_ACCESS_KEY: fittrack-dev-secret
+      S3_BUCKET: fittrack,fittrack-test # dev bucket + the one tests use
+    ports: ["8333:8333"]
+    volumes:
+      - s3data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8333/healthz"]
+      interval: 5s
+      retries: 20
+
 volumes:
   pgdata:
+  s3data:

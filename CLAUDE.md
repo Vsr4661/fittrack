@@ -39,13 +39,13 @@ to explain every line in an interview**, so every change comes with the *why*.
 ```
 apps/server   Express 5 + TypeScript 7 (NodeNext ESM) + Prisma 7 + Postgres + Redis
 apps/mobile   Expo SDK 57 + Expo Router + TypeScript 6 + Zustand + TanStack Query + Axios
-docker-compose.yml   Postgres 17 + Redis 7 for local dev
+docker-compose.yml   Postgres 17 + Redis 7 + SeaweedFS (S3-compatible storage) for local dev
 ```
 
 ## Commands
 
 ```bash
-docker compose up -d --wait           # Postgres + Redis
+docker compose up -d --wait           # Postgres + Redis + S3 (SeaweedFS on :8333)
 npm run dev       -w apps/server      # API on :4000 (tsx watch)
 npm test          -w apps/server      # migrates fittrack_test, then Jest
 npm run typecheck -w apps/server
@@ -73,6 +73,9 @@ npm run typecheck -w apps/mobile
 - Cached data uses `lib/cache.ts` (cache-aside + explicit invalidation + short TTL).
 - Weights are integer grams, durations integer seconds.
 - Routers mounted on a broad path (e.g. `/api/v1`) attach `requireAuth` per route.
+- Object storage only through `lib/storage.ts` (pre-signed URLs, private bucket).
+  Keep `requestChecksumCalculation: "WHEN_REQUIRED"`: the SDK default signs an
+  empty-body checksum into upload links and every real upload fails.
 
 ## Mobile conventions
 
@@ -106,6 +109,8 @@ npm run typecheck -w apps/mobile
   transaction connection (deprecation warning in tests), which pg 9 will reject.
 - Server uses TypeScript 7 (no JS API → tests use @swc/jest, not ts-jest).
   Mobile uses TypeScript 6 (Expo's supported version).
+- MinIO no longer publishes Docker images; local S3 is SeaweedFS (`chrislusf/seaweedfs`,
+  pinned), configured by env vars only because CI service containers take no args.
 - Install scripts are approved explicitly (`allowScripts` in root package.json);
   prebuilt binaries mean most don't need approval.
 
